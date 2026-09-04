@@ -3,6 +3,7 @@ kind: Volume
 metadata:
   annotations:
     meta.upbound.io/example-id: storage/v1beta1/volume
+    upjet.upbound.io/manual-intervention: A Civo volume only leaves the creating state once its network hosts an instance, so a standalone Volume never becomes Ready and cannot be tested self-contained; storage/v1beta1/volumeattachment.yaml covers the tested path.
   labels:
     testing.upbound.io/example-name: example-volume
   name: example-volume

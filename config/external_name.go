@@ -11,9 +11,16 @@ var ExternalNameConfigs = map[string]config.ExternalName{
 	"civo_instance": config.IdentifierFromProvider,
 	"civo_ssh_key":  config.IdentifierFromProvider,
 
+	// database
+	"civo_database": config.IdentifierFromProvider,
+
 	// dns
 	"civo_dns_domain_name":   config.IdentifierFromProvider,
 	"civo_dns_domain_record": config.IdentifierFromProvider,
+
+	// kubernetes
+	"civo_kubernetes_cluster":   config.IdentifierFromProvider,
+	"civo_kubernetes_node_pool": config.IdentifierFromProvider,
 
 	// vpc
 	"civo_vpc_firewall":               config.IdentifierFromProvider,

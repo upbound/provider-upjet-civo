@@ -1,0 +1,15 @@
+apiVersion: database.civo.upbound.io/v1beta1
+kind: Database
+metadata:
+  annotations:
+    meta.upbound.io/example-id: database/v1beta1/database
+  labels:
+    testing.upbound.io/example-name: custom_database
+  name: custom-database
+spec:
+  forProvider:
+    engine: ${element(data.civo_database_version.mysql.versions, 0).engine}
+    name: custom_database
+    nodes: 2
+    size: ${element(data.civo_size.small.sizes, 0).name}
+    version: ${element(data.civo_database_version.mysql.versions, 0).version}

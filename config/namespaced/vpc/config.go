@@ -14,6 +14,14 @@ func Configure(p *config.Provider) {
 		r.References["network_id"] = config.Reference{
 			TerraformName: "civo_vpc_network",
 		}
+		// The API reports the rules it creates for create_default_rules (and
+		// the ones Civo adds for attached clusters) back on read. Copying them
+		// into the spec would trip the upstream CustomizeDiff, which rejects
+		// create_default_rules together with explicit rules, and block every
+		// later observe including the one before delete.
+		r.LateInitializer = config.LateInitializer{
+			IgnoredFields: []string{"ingress_rule", "egress_rule"},
+		}
 	})
 
 	p.AddResourceConfigurator("civo_vpc_reserved_ip_assignment", func(r *config.Resource) {

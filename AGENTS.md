@@ -161,7 +161,15 @@ Any TF attribute marked `Sensitive: true` becomes `<field>SecretRef` in the CRD 
 1. Creates a `provider-secret` Secret in `upbound-system` from `$UPTEST_CLOUD_CREDENTIALS` (JSON with a single `token` key holding the Civo API token).
 2. Applies a `ProviderConfig` (cluster scope) and a `ClusterProviderConfig` (namespaced scope).
 
-The `UPTEST_DATASOURCE_PATH` ini file resolves `${data.<key>}` placeholders in example YAML files (e.g. `region: ${data.civo_default_region}`).
+The `UPTEST_DATASOURCE_PATH` ini file resolves `${data.<key>}` placeholders in example YAML files (e.g. `region: ${data.civo_default_region}`). Keys the examples use:
+
+| Key | Used by | Notes |
+|---|---|---|
+| `civo_default_region` | every regional example | e.g. `NYC1`, `LON1` |
+| `civo_ipv6_network_id` | `vpc/subnet` | an IPv6-enabled network created outside the provider |
+| `civo_disk_image_id` | `compute/instance` and its dependants | e.g. the `debian-12` image |
+
+Civo scopes network and disk image IDs per region: **all three keys must belong to the same region as `civo_default_region`**, otherwise the Subnet and Instance examples fail with not-found errors. Look the IDs up with `GET /v2/networks?region=<r>` and `GET /v2/disk_images?region=<r>`.
 
 ---
 

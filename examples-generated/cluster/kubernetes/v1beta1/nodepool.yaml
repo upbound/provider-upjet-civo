@@ -1,0 +1,38 @@
+apiVersion: kubernetes.civo.upbound.io/v1beta1
+kind: NodePool
+metadata:
+  annotations:
+    meta.upbound.io/example-id: kubernetes/v1beta1/nodepool
+  labels:
+    testing.upbound.io/example-name: back-end
+  name: back-end
+spec:
+  forProvider:
+    clusterIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: my-cluster
+    label: back-end
+    nodeCount: 1
+    region: LON1
+    size: ${element(data.civo_size.xsmall.sizes, 0).name}
+
+---
+
+apiVersion: kubernetes.civo.upbound.io/v1beta1
+kind: Cluster
+metadata:
+  annotations:
+    meta.upbound.io/example-id: kubernetes/v1beta1/nodepool
+  labels:
+    testing.upbound.io/example-name: my-cluster
+  name: my-cluster
+spec:
+  forProvider:
+    applications: Portainer,Linkerd:Linkerd & Jaeger
+    firewallIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: my-firewall
+    name: my-cluster
+    pools:
+    - nodeCount: 3
+      size: ${element(data.civo_size.xsmall.sizes, 0).name}

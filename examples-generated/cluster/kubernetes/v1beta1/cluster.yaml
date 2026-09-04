@@ -1,0 +1,16 @@
+apiVersion: kubernetes.civo.upbound.io/v1beta1
+kind: Cluster
+metadata:
+  annotations:
+    meta.upbound.io/example-id: kubernetes/v1beta1/cluster
+  labels:
+    testing.upbound.io/example-name: example
+  name: example
+spec:
+  forProvider:
+    firewallIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: civo_firewall
+    pools:
+    - nodeCount: 3
+      size: g4s.kube.xsmall

@@ -3,9 +3,9 @@ kind: ClusterProviderConfig
 metadata:
   name: default
 spec:
-  # region sets the default Civo region (for example LON1, NYC1, FRA1 or PHX1)
-  # for managed resources that do not set their own region.
-  # region: LON1
+  # apiEndpoint overrides the Civo API base URL; leave it unset for the public
+  # Civo cloud (https://api.civo.com).
+  # apiEndpoint: https://api.civo.com
   credentials:
     source: Secret
     secretRef:

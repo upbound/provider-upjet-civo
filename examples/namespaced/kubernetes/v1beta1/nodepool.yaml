@@ -1,0 +1,86 @@
+apiVersion: kubernetes.civo.m.upbound.io/v1beta1
+kind: NodePool
+metadata:
+  annotations:
+    meta.upbound.io/example-id: kubernetes/v1beta1/nodepool
+  labels:
+    testing.upbound.io/example-name: example-nodepool
+  name: example-nodepool
+  namespace: upbound-system
+spec:
+  forProvider:
+    # The upstream Terraform resource has no region of its own and would use
+    # the ProviderConfig region for every API call; setting it here scopes the
+    # API client to the cluster's region for this resource.
+    region: ${data.civo_default_region}
+    label: example-nodepool
+    size: g4s.kube.xsmall
+    nodeCount: 1
+    clusterIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-nodepool
+
+---
+
+apiVersion: kubernetes.civo.m.upbound.io/v1beta1
+kind: Cluster
+metadata:
+  annotations:
+    meta.upbound.io/example-id: kubernetes/v1beta1/nodepool
+  labels:
+    testing.upbound.io/example-name: example-nodepool
+  name: example-nodepool
+  namespace: upbound-system
+spec:
+  forProvider:
+    name: example-nodepool
+    region: ${data.civo_default_region}
+    writeKubeconfig: true
+    pools:
+      label: example-nodepool-default
+      size: g4s.kube.xsmall
+      nodeCount: 1
+    networkIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-nodepool
+    firewallIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-nodepool
+  writeConnectionSecretToRef:
+    name: example-nodepool-kubeconfig
+
+---
+
+apiVersion: vpc.civo.m.upbound.io/v1beta1
+kind: Network
+metadata:
+  annotations:
+    meta.upbound.io/example-id: kubernetes/v1beta1/nodepool
+  labels:
+    testing.upbound.io/example-name: example-nodepool
+  name: example-nodepool
+  namespace: upbound-system
+spec:
+  forProvider:
+    label: example-nodepool
+    region: ${data.civo_default_region}
+
+---
+
+apiVersion: vpc.civo.m.upbound.io/v1beta1
+kind: Firewall
+metadata:
+  annotations:
+    meta.upbound.io/example-id: kubernetes/v1beta1/nodepool
+  labels:
+    testing.upbound.io/example-name: example-nodepool
+  name: example-nodepool
+  namespace: upbound-system
+spec:
+  forProvider:
+    name: example-nodepool
+    region: ${data.civo_default_region}
+    networkIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-nodepool
+    createDefaultRules: true

@@ -11,8 +11,11 @@ import (
 
 	instance "github.com/upbound/provider-civo/internal/controller/cluster/compute/instance"
 	sshkey "github.com/upbound/provider-civo/internal/controller/cluster/compute/sshkey"
+	database "github.com/upbound/provider-civo/internal/controller/cluster/database/database"
 	domain "github.com/upbound/provider-civo/internal/controller/cluster/dns/domain"
 	record "github.com/upbound/provider-civo/internal/controller/cluster/dns/record"
+	cluster "github.com/upbound/provider-civo/internal/controller/cluster/kubernetes/cluster"
+	nodepool "github.com/upbound/provider-civo/internal/controller/cluster/kubernetes/nodepool"
 	providerconfig "github.com/upbound/provider-civo/internal/controller/cluster/providerconfig"
 	objectstore "github.com/upbound/provider-civo/internal/controller/cluster/storage/objectstore"
 	objectstorecredential "github.com/upbound/provider-civo/internal/controller/cluster/storage/objectstorecredential"
@@ -31,8 +34,11 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 	for _, setup := range []func(ctrl.Manager, controller.Options) error{
 		instance.Setup,
 		sshkey.Setup,
+		database.Setup,
 		domain.Setup,
 		record.Setup,
+		cluster.Setup,
+		nodepool.Setup,
 		providerconfig.Setup,
 		objectstore.Setup,
 		objectstorecredential.Setup,
@@ -57,8 +63,11 @@ func SetupGated(mgr ctrl.Manager, o controller.Options) error {
 	for _, setup := range []func(ctrl.Manager, controller.Options) error{
 		instance.SetupGated,
 		sshkey.SetupGated,
+		database.SetupGated,
 		domain.SetupGated,
 		record.SetupGated,
+		cluster.SetupGated,
+		nodepool.SetupGated,
 		providerconfig.SetupGated,
 		objectstore.SetupGated,
 		objectstorecredential.SetupGated,
@@ -82,8 +91,11 @@ func SetupWebhookWithManager(mgr ctrl.Manager) error {
 	for _, setup := range []func(ctrl.Manager) error{
 		instance.SetupWebhookWithManager,
 		sshkey.SetupWebhookWithManager,
+		database.SetupWebhookWithManager,
 		domain.SetupWebhookWithManager,
 		record.SetupWebhookWithManager,
+		cluster.SetupWebhookWithManager,
+		nodepool.SetupWebhookWithManager,
 		providerconfig.SetupWebhookWithManager,
 		objectstore.SetupWebhookWithManager,
 		objectstorecredential.SetupWebhookWithManager,

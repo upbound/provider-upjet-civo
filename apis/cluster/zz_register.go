@@ -11,7 +11,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	v1beta1 "github.com/upbound/provider-civo/apis/cluster/compute/v1beta1"
+	v1beta1database "github.com/upbound/provider-civo/apis/cluster/database/v1beta1"
 	v1beta1dns "github.com/upbound/provider-civo/apis/cluster/dns/v1beta1"
+	v1beta1kubernetes "github.com/upbound/provider-civo/apis/cluster/kubernetes/v1beta1"
 	v1beta1storage "github.com/upbound/provider-civo/apis/cluster/storage/v1beta1"
 	v1alpha1 "github.com/upbound/provider-civo/apis/cluster/v1alpha1"
 	v1beta1cluster "github.com/upbound/provider-civo/apis/cluster/v1beta1"
@@ -22,7 +24,9 @@ func init() {
 	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back
 	AddToSchemes = append(AddToSchemes,
 		v1beta1.SchemeBuilder.AddToScheme,
+		v1beta1database.SchemeBuilder.AddToScheme,
 		v1beta1dns.SchemeBuilder.AddToScheme,
+		v1beta1kubernetes.SchemeBuilder.AddToScheme,
 		v1beta1storage.SchemeBuilder.AddToScheme,
 		v1alpha1.SchemeBuilder.AddToScheme,
 		v1beta1cluster.SchemeBuilder.AddToScheme,

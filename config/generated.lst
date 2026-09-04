@@ -1,7 +1,10 @@
 [
+"civo_database",
 "civo_dns_domain_name",
 "civo_dns_domain_record",
 "civo_instance",
+"civo_kubernetes_cluster",
+"civo_kubernetes_node_pool",
 "civo_object_store",
 "civo_object_store_credential",
 "civo_ssh_key",

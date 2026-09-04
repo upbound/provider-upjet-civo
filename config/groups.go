@@ -49,9 +49,16 @@ var GroupMap = map[string]GroupKindCalculator{
 	"civo_instance": KnownGroupKind("compute", "Instance"),
 	"civo_ssh_key":  KnownGroupKind("compute", "SSHKey"),
 
+	// database
+	"civo_database": KnownGroupKind("database", "Database"),
+
 	// dns
 	"civo_dns_domain_name":   KnownGroupKind("dns", "Domain"),
 	"civo_dns_domain_record": KnownGroupKind("dns", "Record"),
+
+	// kubernetes
+	"civo_kubernetes_cluster":   KnownGroupKind("kubernetes", "Cluster"),
+	"civo_kubernetes_node_pool": KnownGroupKind("kubernetes", "NodePool"),
 
 	// vpc
 	"civo_vpc_firewall":               KnownGroupKind("vpc", "Firewall"),

@@ -3,6 +3,7 @@ kind: VolumeAttachment
 metadata:
   annotations:
     meta.upbound.io/example-id: storage/v1beta1/volumeattachment
+    uptest.upbound.io/timeout: "3600"
   labels:
     testing.upbound.io/example-name: example-volumeattachment
   name: example-volumeattachment
