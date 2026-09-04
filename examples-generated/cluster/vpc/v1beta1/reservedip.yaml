@@ -1,0 +1,11 @@
+apiVersion: vpc.civo.upbound.io/v1beta1
+kind: ReservedIP
+metadata:
+  annotations:
+    meta.upbound.io/example-id: vpc/v1beta1/reservedip
+  labels:
+    testing.upbound.io/example-name: www
+  name: www
+spec:
+  forProvider:
+    name: nginx-www

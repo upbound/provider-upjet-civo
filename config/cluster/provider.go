@@ -4,5 +4,12 @@
 
 package cluster
 
-// Per-group AddResourceConfigurator registrations are added here as resources
-// are onboarded, e.g. ProviderConfiguration.AddConfig(compute.Configure).
+import (
+	"github.com/upbound/provider-civo/config/cluster/dns"
+	"github.com/upbound/provider-civo/config/cluster/vpc"
+)
+
+func init() {
+	ProviderConfiguration.AddConfig(dns.Configure)
+	ProviderConfiguration.AddConfig(vpc.Configure)
+}

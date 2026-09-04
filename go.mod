@@ -5,6 +5,7 @@ go 1.26.8
 tool golang.org/x/tools/cmd/goimports
 
 require (
+	dario.cat/mergo v1.0.2
 	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/civo/terraform-provider-civo v1.3.2
 	github.com/crossplane/crossplane-runtime/v2 v2.4.0
@@ -25,7 +26,6 @@ require (
 require (
 	cel.dev/expr v0.25.2 // indirect
 	cloud.google.com/go v0.123.0 // indirect
-	dario.cat/mergo v1.0.2 // indirect
 	github.com/ProtonMail/go-crypto v1.4.1 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b // indirect

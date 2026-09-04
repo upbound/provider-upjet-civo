@@ -1,0 +1,31 @@
+apiVersion: vpc.civo.upbound.io/v1beta1
+kind: ReservedIPAssignment
+metadata:
+  annotations:
+    meta.upbound.io/example-id: vpc/v1beta1/reservedipassignment
+    upjet.upbound.io/manual-intervention: Requires an existing compute Instance to assign the reserved IP to; instanceId becomes a reference once the compute group is onboarded.
+  labels:
+    testing.upbound.io/example-name: example-reservedipassignment
+  name: example-reservedipassignment
+spec:
+  forProvider:
+    region: ${data.civo_default_region}
+    instanceId: <instance UUID>
+    reservedIpIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-reservedipassignment
+
+---
+
+apiVersion: vpc.civo.upbound.io/v1beta1
+kind: ReservedIP
+metadata:
+  annotations:
+    meta.upbound.io/example-id: vpc/v1beta1/reservedipassignment
+  labels:
+    testing.upbound.io/example-name: example-reservedipassignment
+  name: example-reservedipassignment
+spec:
+  forProvider:
+    name: example-reservedipassignment
+    region: ${data.civo_default_region}

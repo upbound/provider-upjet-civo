@@ -1,0 +1,14 @@
+apiVersion: vpc.civo.upbound.io/v1beta1
+kind: ReservedIPAssignment
+metadata:
+  annotations:
+    meta.upbound.io/example-id: vpc/v1beta1/reservedipassignment
+  labels:
+    testing.upbound.io/example-name: webserver-www
+  name: webserver-www
+spec:
+  forProvider:
+    instanceId: ${civo_instance.www.id}
+    reservedIpIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: web-server

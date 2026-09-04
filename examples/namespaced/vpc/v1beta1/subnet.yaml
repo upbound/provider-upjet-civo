@@ -1,0 +1,18 @@
+apiVersion: vpc.civo.m.upbound.io/v1beta1
+kind: Subnet
+metadata:
+  annotations:
+    meta.upbound.io/example-id: vpc/v1beta1/subnet
+  labels:
+    testing.upbound.io/example-name: example-subnet
+  name: example-subnet
+  namespace: upbound-system
+spec:
+  forProvider:
+    name: example-subnet
+    region: ${data.civo_default_region}
+    # Subnets can only be created in a network with IPv6 enabled. The
+    # civo/civo Terraform provider (1.3.2) exposes no ipv6_enabled attribute on
+    # networks, so the network is pre-created outside the provider and passed
+    # in through the uptest datasource instead of a networkIdSelector.
+    networkId: ${data.civo_ipv6_network_id}

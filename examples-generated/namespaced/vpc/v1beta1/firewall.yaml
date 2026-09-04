@@ -1,0 +1,44 @@
+apiVersion: vpc.civo.m.upbound.io/v1beta1
+kind: Firewall
+metadata:
+  annotations:
+    meta.upbound.io/example-id: vpc/v1beta1/firewall
+  labels:
+    testing.upbound.io/example-name: example
+  name: example
+  namespace: upbound-system
+spec:
+  forProvider:
+    createDefaultRules: false
+    egressRule:
+    - action: allow
+      cidr:
+      - 0.0.0.0/0
+      label: all
+      portRange: 1-65535
+      protocol: tcp
+    ingressRule:
+    - action: allow
+      cidr:
+      - 0.0.0.0
+      label: http
+      portRange: "80"
+      protocol: tcp
+    - action: allow
+      cidr:
+      - 0.0.0.0
+      label: https
+      portRange: "443"
+      protocol: tcp
+    - action: allow
+      cidr:
+      - 192.168.1.1/32
+      - 192.168.10.4/32
+      - 192.168.10.10/32
+      label: ssh
+      portRange: "22"
+      protocol: tcp
+    name: example-firewall
+    networkIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example

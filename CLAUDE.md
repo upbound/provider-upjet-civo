@@ -161,7 +161,7 @@ Any TF attribute marked `Sensitive: true` becomes `<field>SecretRef` in the CRD 
 1. Creates a `provider-secret` Secret in `upbound-system` from `$UPTEST_CLOUD_CREDENTIALS` (JSON with a single `token` key holding the Civo API token).
 2. Applies a `ProviderConfig` (cluster scope) and a `ClusterProviderConfig` (namespaced scope).
 
-The `UPTEST_DATASOURCE_PATH` ini file resolves `${data.<key>}` placeholders in example YAML files (e.g. `region: ${data.region}`).
+The `UPTEST_DATASOURCE_PATH` ini file resolves `${data.<key>}` placeholders in example YAML files (e.g. `region: ${data.civo_default_region}`).
 
 ---
 

@@ -49,6 +49,10 @@ func GetProvider(_ context.Context) (*ujconfig.Provider, error) {
 		ujconfig.WithDefaultResourceOptions(defaultResourceOptions...),
 	)
 
+	if err := attachLegacyMetadata(pc); err != nil {
+		return nil, err
+	}
+
 	// add custom config functions
 	for _, configure := range cluster.ProviderConfiguration {
 		configure(pc)

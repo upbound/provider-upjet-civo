@@ -6,7 +6,18 @@ import (
 
 // ExternalNameConfigs contains all external name configurations for this
 // provider.
-var ExternalNameConfigs = map[string]config.ExternalName{}
+var ExternalNameConfigs = map[string]config.ExternalName{
+	// dns
+	"civo_dns_domain_name":   config.IdentifierFromProvider,
+	"civo_dns_domain_record": config.IdentifierFromProvider,
+
+	// vpc
+	"civo_vpc_firewall":               config.IdentifierFromProvider,
+	"civo_vpc_network":                config.IdentifierFromProvider,
+	"civo_vpc_reserved_ip":            config.IdentifierFromProvider,
+	"civo_vpc_reserved_ip_assignment": config.IdentifierFromProvider,
+	"civo_vpc_subnet":                 config.IdentifierFromProvider,
+}
 
 // ExternalNameConfigurations applies all external name configs listed in the
 // table ExternalNameConfigs and sets the version of those resources to v1beta1

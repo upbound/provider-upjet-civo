@@ -1,1 +1,9 @@
-[]
+[
+"civo_dns_domain_name",
+"civo_dns_domain_record",
+"civo_vpc_firewall",
+"civo_vpc_network",
+"civo_vpc_reserved_ip",
+"civo_vpc_reserved_ip_assignment",
+"civo_vpc_subnet"
+]
