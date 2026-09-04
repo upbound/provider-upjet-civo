@@ -17,7 +17,16 @@ type ReservedIPAssignmentInitParameters struct {
 
 	// (String) The instance id
 	// The instance id
+	// +crossplane:generate:reference:type=github.com/upbound/provider-civo/apis/namespaced/compute/v1beta1.Instance
 	InstanceID *string `json:"instanceId,omitempty" tf:"instance_id,omitempty"`
+
+	// Reference to a Instance in compute to populate instanceId.
+	// +kubebuilder:validation:Optional
+	InstanceIDRef *v2.NamespacedReference `json:"instanceIdRef,omitempty" tf:"-"`
+
+	// Selector for a Instance in compute to populate instanceId.
+	// +kubebuilder:validation:Optional
+	InstanceIDSelector *v2.NamespacedSelector `json:"instanceIdSelector,omitempty" tf:"-"`
 
 	// (String) The region of the ip
 	// The region of the ip
@@ -59,8 +68,17 @@ type ReservedIPAssignmentParameters struct {
 
 	// (String) The instance id
 	// The instance id
+	// +crossplane:generate:reference:type=github.com/upbound/provider-civo/apis/namespaced/compute/v1beta1.Instance
 	// +kubebuilder:validation:Optional
 	InstanceID *string `json:"instanceId,omitempty" tf:"instance_id,omitempty"`
+
+	// Reference to a Instance in compute to populate instanceId.
+	// +kubebuilder:validation:Optional
+	InstanceIDRef *v2.NamespacedReference `json:"instanceIdRef,omitempty" tf:"-"`
+
+	// Selector for a Instance in compute to populate instanceId.
+	// +kubebuilder:validation:Optional
+	InstanceIDSelector *v2.NamespacedSelector `json:"instanceIdSelector,omitempty" tf:"-"`
 
 	// (String) The region of the ip
 	// The region of the ip
@@ -118,9 +136,8 @@ type ReservedIPAssignmentStatus struct {
 type ReservedIPAssignment struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.instanceId) || (has(self.initProvider) && has(self.initProvider.instanceId))",message="spec.forProvider.instanceId is a required parameter"
-	Spec   ReservedIPAssignmentSpec   `json:"spec"`
-	Status ReservedIPAssignmentStatus `json:"status,omitempty"`
+	Spec              ReservedIPAssignmentSpec   `json:"spec"`
+	Status            ReservedIPAssignmentStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true

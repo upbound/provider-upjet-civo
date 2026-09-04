@@ -1,0 +1,31 @@
+apiVersion: storage.civo.upbound.io/v1beta1
+kind: ObjectStore
+metadata:
+  annotations:
+    meta.upbound.io/example-id: storage/v1beta1/objectstore
+  labels:
+    testing.upbound.io/example-name: example-objectstore
+  name: example-objectstore
+spec:
+  forProvider:
+    name: example-store-${Rand.RFC1123Subdomain}
+    maxSizeGb: 500
+    region: ${data.civo_default_region}
+    accessKeyIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-objectstore
+
+---
+
+apiVersion: storage.civo.upbound.io/v1beta1
+kind: ObjectStoreCredential
+metadata:
+  annotations:
+    meta.upbound.io/example-id: storage/v1beta1/objectstore
+  labels:
+    testing.upbound.io/example-name: example-objectstore
+  name: example-objectstore
+spec:
+  forProvider:
+    name: example-credential-${Rand.RFC1123Subdomain}
+    region: ${data.civo_default_region}

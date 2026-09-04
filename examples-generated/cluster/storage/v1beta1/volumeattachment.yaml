@@ -1,0 +1,54 @@
+apiVersion: storage.civo.upbound.io/v1beta1
+kind: VolumeAttachment
+metadata:
+  annotations:
+    meta.upbound.io/example-id: storage/v1beta1/volumeattachment
+  labels:
+    testing.upbound.io/example-name: foobar
+  name: foobar
+spec:
+  forProvider:
+    instanceIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: foo
+    volumeIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: db
+
+---
+
+apiVersion: compute.civo.upbound.io/v1beta1
+kind: Instance
+metadata:
+  annotations:
+    meta.upbound.io/example-id: storage/v1beta1/volumeattachment
+  labels:
+    testing.upbound.io/example-name: foo
+  name: foo
+spec:
+  forProvider:
+    diskImage: ${element(data.civo_disk_image.debian.diskimages, 0).id}
+    hostname: foo.com
+    notes: this is a note for the server
+    size: ${element(data.civo_instances_size.small.sizes, 0).name}
+    tags:
+    - python
+    - nginx
+
+---
+
+apiVersion: storage.civo.upbound.io/v1beta1
+kind: Volume
+metadata:
+  annotations:
+    meta.upbound.io/example-id: storage/v1beta1/volumeattachment
+  labels:
+    testing.upbound.io/example-name: db
+  name: db
+spec:
+  forProvider:
+    name: backup-data
+    networkIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: foo
+    sizeGb: 5

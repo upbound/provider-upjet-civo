@@ -8,7 +8,9 @@ metadata:
   name: webserver-www
 spec:
   forProvider:
-    instanceId: ${civo_instance.www.id}
+    instanceIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: www
     reservedIpIdSelector:
       matchLabels:
         testing.upbound.io/example-name: web-server

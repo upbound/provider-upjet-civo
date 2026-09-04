@@ -1,0 +1,16 @@
+apiVersion: storage.civo.m.upbound.io/v1beta1
+kind: Volume
+metadata:
+  annotations:
+    meta.upbound.io/example-id: storage/v1beta1/volume
+  labels:
+    testing.upbound.io/example-name: db
+  name: db
+  namespace: upbound-system
+spec:
+  forProvider:
+    name: backup-data
+    networkIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: civo_network
+    sizeGb: 5

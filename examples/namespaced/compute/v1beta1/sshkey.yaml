@@ -1,0 +1,13 @@
+apiVersion: compute.civo.m.upbound.io/v1beta1
+kind: SSHKey
+metadata:
+  annotations:
+    meta.upbound.io/example-id: compute/v1beta1/sshkey
+  labels:
+    testing.upbound.io/example-name: example-sshkey
+  name: example-sshkey
+  namespace: upbound-system
+spec:
+  forProvider:
+    name: example-sshkey
+    publicKey: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICU9OUV4vLqZFjdO74i5ex9EWQWLPgzLV5hrmi11Rp02

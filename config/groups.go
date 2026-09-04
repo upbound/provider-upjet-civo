@@ -45,6 +45,10 @@ func KnownGroupKind(group, kind string) GroupKindCalculator {
 // GroupMap assigns Civo resources to API groups and kinds. Resources are
 // added here together with their entry in ExternalNameConfigs.
 var GroupMap = map[string]GroupKindCalculator{
+	// compute
+	"civo_instance": KnownGroupKind("compute", "Instance"),
+	"civo_ssh_key":  KnownGroupKind("compute", "SSHKey"),
+
 	// dns
 	"civo_dns_domain_name":   KnownGroupKind("dns", "Domain"),
 	"civo_dns_domain_record": KnownGroupKind("dns", "Record"),
@@ -55,4 +59,10 @@ var GroupMap = map[string]GroupKindCalculator{
 	"civo_vpc_reserved_ip":            KnownGroupKind("vpc", "ReservedIP"),
 	"civo_vpc_reserved_ip_assignment": KnownGroupKind("vpc", "ReservedIPAssignment"),
 	"civo_vpc_subnet":                 KnownGroupKind("vpc", "Subnet"),
+
+	// storage
+	"civo_object_store":            KnownGroupKind("storage", "ObjectStore"),
+	"civo_object_store_credential": KnownGroupKind("storage", "ObjectStoreCredential"),
+	"civo_volume":                  KnownGroupKind("storage", "Volume"),
+	"civo_volume_attachment":       KnownGroupKind("storage", "VolumeAttachment"),
 }

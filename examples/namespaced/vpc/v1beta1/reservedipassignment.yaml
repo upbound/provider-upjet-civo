@@ -3,7 +3,6 @@ kind: ReservedIPAssignment
 metadata:
   annotations:
     meta.upbound.io/example-id: vpc/v1beta1/reservedipassignment
-    upjet.upbound.io/manual-intervention: Requires an existing compute Instance to assign the reserved IP to; instanceId becomes a reference once the compute group is onboarded.
   labels:
     testing.upbound.io/example-name: example-reservedipassignment
   name: example-reservedipassignment
@@ -11,7 +10,9 @@ metadata:
 spec:
   forProvider:
     region: ${data.civo_default_region}
-    instanceId: <instance UUID>
+    instanceIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-reservedipassignment
     reservedIpIdSelector:
       matchLabels:
         testing.upbound.io/example-name: example-reservedipassignment
@@ -31,3 +32,63 @@ spec:
   forProvider:
     name: example-reservedipassignment
     region: ${data.civo_default_region}
+
+---
+
+apiVersion: compute.civo.m.upbound.io/v1beta1
+kind: Instance
+metadata:
+  annotations:
+    meta.upbound.io/example-id: vpc/v1beta1/reservedipassignment
+  labels:
+    testing.upbound.io/example-name: example-reservedipassignment
+  name: example-reservedipassignment
+  namespace: upbound-system
+spec:
+  forProvider:
+    hostname: example-reservedipassignment
+    size: g4s.xsmall
+    diskImage: ${data.civo_disk_image_id}
+    region: ${data.civo_default_region}
+    networkIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-reservedipassignment
+    firewallIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-reservedipassignment
+
+---
+
+apiVersion: vpc.civo.m.upbound.io/v1beta1
+kind: Network
+metadata:
+  annotations:
+    meta.upbound.io/example-id: vpc/v1beta1/reservedipassignment
+  labels:
+    testing.upbound.io/example-name: example-reservedipassignment
+  name: example-reservedipassignment
+  namespace: upbound-system
+spec:
+  forProvider:
+    label: example-reservedipassignment
+    region: ${data.civo_default_region}
+
+---
+
+apiVersion: vpc.civo.m.upbound.io/v1beta1
+kind: Firewall
+metadata:
+  annotations:
+    meta.upbound.io/example-id: vpc/v1beta1/reservedipassignment
+  labels:
+    testing.upbound.io/example-name: example-reservedipassignment
+  name: example-reservedipassignment
+  namespace: upbound-system
+spec:
+  forProvider:
+    name: example-reservedipassignment
+    region: ${data.civo_default_region}
+    networkIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-reservedipassignment
+    createDefaultRules: true

@@ -5,11 +5,15 @@
 package cluster
 
 import (
+	"github.com/upbound/provider-civo/config/cluster/compute"
 	"github.com/upbound/provider-civo/config/cluster/dns"
+	"github.com/upbound/provider-civo/config/cluster/storage"
 	"github.com/upbound/provider-civo/config/cluster/vpc"
 )
 
 func init() {
+	ProviderConfiguration.AddConfig(compute.Configure)
 	ProviderConfiguration.AddConfig(dns.Configure)
+	ProviderConfiguration.AddConfig(storage.Configure)
 	ProviderConfiguration.AddConfig(vpc.Configure)
 }

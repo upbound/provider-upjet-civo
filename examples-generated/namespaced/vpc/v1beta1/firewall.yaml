@@ -42,3 +42,27 @@ spec:
     networkIdSelector:
       matchLabels:
         testing.upbound.io/example-name: example
+
+---
+
+apiVersion: compute.civo.m.upbound.io/v1beta1
+kind: Instance
+metadata:
+  annotations:
+    meta.upbound.io/example-id: vpc/v1beta1/firewall
+  labels:
+    testing.upbound.io/example-name: example
+  name: example
+  namespace: upbound-system
+spec:
+  forProvider:
+    diskImage: ${data.civo_disk_image.debian.diskimages[0].id}
+    firewallIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example
+    hostname: example
+    networkIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example
+    notes: This is an example instance
+    size: g3.xsmall

@@ -17,8 +17,9 @@ func Configure(p *config.Provider) {
 	})
 
 	p.AddResourceConfigurator("civo_vpc_reserved_ip_assignment", func(r *config.Resource) {
-		// instance_id becomes a reference to civo_instance once the compute
-		// group is onboarded.
+		r.References["instance_id"] = config.Reference{
+			TerraformName: "civo_instance",
+		}
 		r.References["reserved_ip_id"] = config.Reference{
 			TerraformName: "civo_vpc_reserved_ip",
 		}

@@ -9,9 +9,15 @@ import (
 
 	"github.com/crossplane/upjet/v2/pkg/controller"
 
+	instance "github.com/upbound/provider-civo/internal/controller/namespaced/compute/instance"
+	sshkey "github.com/upbound/provider-civo/internal/controller/namespaced/compute/sshkey"
 	domain "github.com/upbound/provider-civo/internal/controller/namespaced/dns/domain"
 	record "github.com/upbound/provider-civo/internal/controller/namespaced/dns/record"
 	providerconfig "github.com/upbound/provider-civo/internal/controller/namespaced/providerconfig"
+	objectstore "github.com/upbound/provider-civo/internal/controller/namespaced/storage/objectstore"
+	objectstorecredential "github.com/upbound/provider-civo/internal/controller/namespaced/storage/objectstorecredential"
+	volume "github.com/upbound/provider-civo/internal/controller/namespaced/storage/volume"
+	volumeattachment "github.com/upbound/provider-civo/internal/controller/namespaced/storage/volumeattachment"
 	firewall "github.com/upbound/provider-civo/internal/controller/namespaced/vpc/firewall"
 	network "github.com/upbound/provider-civo/internal/controller/namespaced/vpc/network"
 	reservedip "github.com/upbound/provider-civo/internal/controller/namespaced/vpc/reservedip"
@@ -23,9 +29,15 @@ import (
 // the supplied manager.
 func Setup(mgr ctrl.Manager, o controller.Options) error {
 	for _, setup := range []func(ctrl.Manager, controller.Options) error{
+		instance.Setup,
+		sshkey.Setup,
 		domain.Setup,
 		record.Setup,
 		providerconfig.Setup,
+		objectstore.Setup,
+		objectstorecredential.Setup,
+		volume.Setup,
+		volumeattachment.Setup,
 		firewall.Setup,
 		network.Setup,
 		reservedip.Setup,
@@ -43,9 +55,15 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 // the supplied manager gated.
 func SetupGated(mgr ctrl.Manager, o controller.Options) error {
 	for _, setup := range []func(ctrl.Manager, controller.Options) error{
+		instance.SetupGated,
+		sshkey.SetupGated,
 		domain.SetupGated,
 		record.SetupGated,
 		providerconfig.SetupGated,
+		objectstore.SetupGated,
+		objectstorecredential.SetupGated,
+		volume.SetupGated,
+		volumeattachment.SetupGated,
 		firewall.SetupGated,
 		network.SetupGated,
 		reservedip.SetupGated,
@@ -62,9 +80,15 @@ func SetupGated(mgr ctrl.Manager, o controller.Options) error {
 // SetupWebhookWithManager registers conversion webhooks for all resource kinds in the group.
 func SetupWebhookWithManager(mgr ctrl.Manager) error {
 	for _, setup := range []func(ctrl.Manager) error{
+		instance.SetupWebhookWithManager,
+		sshkey.SetupWebhookWithManager,
 		domain.SetupWebhookWithManager,
 		record.SetupWebhookWithManager,
 		providerconfig.SetupWebhookWithManager,
+		objectstore.SetupWebhookWithManager,
+		objectstorecredential.SetupWebhookWithManager,
+		volume.SetupWebhookWithManager,
+		volumeattachment.SetupWebhookWithManager,
 		firewall.SetupWebhookWithManager,
 		network.SetupWebhookWithManager,
 		reservedip.SetupWebhookWithManager,

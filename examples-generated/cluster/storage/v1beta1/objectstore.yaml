@@ -1,0 +1,13 @@
+apiVersion: storage.civo.upbound.io/v1beta1
+kind: ObjectStore
+metadata:
+  annotations:
+    meta.upbound.io/example-id: storage/v1beta1/objectstore
+  labels:
+    testing.upbound.io/example-name: backup
+  name: backup
+spec:
+  forProvider:
+    maxSizeGb: 500
+    name: backup-server
+    region: LON1

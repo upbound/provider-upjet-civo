@@ -7,6 +7,10 @@ import (
 // ExternalNameConfigs contains all external name configurations for this
 // provider.
 var ExternalNameConfigs = map[string]config.ExternalName{
+	// compute
+	"civo_instance": config.IdentifierFromProvider,
+	"civo_ssh_key":  config.IdentifierFromProvider,
+
 	// dns
 	"civo_dns_domain_name":   config.IdentifierFromProvider,
 	"civo_dns_domain_record": config.IdentifierFromProvider,
@@ -17,6 +21,12 @@ var ExternalNameConfigs = map[string]config.ExternalName{
 	"civo_vpc_reserved_ip":            config.IdentifierFromProvider,
 	"civo_vpc_reserved_ip_assignment": config.IdentifierFromProvider,
 	"civo_vpc_subnet":                 config.IdentifierFromProvider,
+
+	// storage
+	"civo_object_store":            config.IdentifierFromProvider,
+	"civo_object_store_credential": config.IdentifierFromProvider,
+	"civo_volume":                  config.IdentifierFromProvider,
+	"civo_volume_attachment":       config.IdentifierFromProvider,
 }
 
 // ExternalNameConfigurations applies all external name configs listed in the

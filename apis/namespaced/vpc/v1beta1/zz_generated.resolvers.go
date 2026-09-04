@@ -77,6 +77,26 @@ func (mg *ReservedIPAssignment) ResolveReferences(ctx context.Context, c client.
 	var rsp reference.NamespacedResolutionResponse
 	var err error
 	{
+		m, l, err = apisresolver.GetManagedResource("compute.civo.m.upbound.io", "v1beta1", "Instance", "InstanceList")
+		if err != nil {
+			return errors.Wrap(err, "failed to get the reference target managed resource and its list for reference resolution")
+		}
+
+		rsp, err = r.Resolve(ctx, reference.NamespacedResolutionRequest{
+			CurrentValue: reference.FromPtrValue(mg.Spec.ForProvider.InstanceID),
+			Extract:      reference.ExternalName(),
+			Namespace:    mg.GetNamespace(),
+			Reference:    mg.Spec.ForProvider.InstanceIDRef,
+			Selector:     mg.Spec.ForProvider.InstanceIDSelector,
+			To:           reference.To{List: l, Managed: m},
+		})
+	}
+	if err != nil {
+		return errors.Wrap(err, "mg.Spec.ForProvider.InstanceID")
+	}
+	mg.Spec.ForProvider.InstanceID = reference.ToPtrValue(rsp.ResolvedValue)
+	mg.Spec.ForProvider.InstanceIDRef = rsp.ResolvedReference
+	{
 		m, l, err = apisresolver.GetManagedResource("vpc.civo.m.upbound.io", "v1beta1", "ReservedIP", "ReservedIPList")
 		if err != nil {
 			return errors.Wrap(err, "failed to get the reference target managed resource and its list for reference resolution")
@@ -96,6 +116,26 @@ func (mg *ReservedIPAssignment) ResolveReferences(ctx context.Context, c client.
 	}
 	mg.Spec.ForProvider.ReservedIPID = reference.ToPtrValue(rsp.ResolvedValue)
 	mg.Spec.ForProvider.ReservedIPIDRef = rsp.ResolvedReference
+	{
+		m, l, err = apisresolver.GetManagedResource("compute.civo.m.upbound.io", "v1beta1", "Instance", "InstanceList")
+		if err != nil {
+			return errors.Wrap(err, "failed to get the reference target managed resource and its list for reference resolution")
+		}
+
+		rsp, err = r.Resolve(ctx, reference.NamespacedResolutionRequest{
+			CurrentValue: reference.FromPtrValue(mg.Spec.InitProvider.InstanceID),
+			Extract:      reference.ExternalName(),
+			Namespace:    mg.GetNamespace(),
+			Reference:    mg.Spec.InitProvider.InstanceIDRef,
+			Selector:     mg.Spec.InitProvider.InstanceIDSelector,
+			To:           reference.To{List: l, Managed: m},
+		})
+	}
+	if err != nil {
+		return errors.Wrap(err, "mg.Spec.InitProvider.InstanceID")
+	}
+	mg.Spec.InitProvider.InstanceID = reference.ToPtrValue(rsp.ResolvedValue)
+	mg.Spec.InitProvider.InstanceIDRef = rsp.ResolvedReference
 	{
 		m, l, err = apisresolver.GetManagedResource("vpc.civo.m.upbound.io", "v1beta1", "ReservedIP", "ReservedIPList")
 		if err != nil {

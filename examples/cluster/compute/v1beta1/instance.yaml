@@ -1,0 +1,75 @@
+apiVersion: compute.civo.upbound.io/v1beta1
+kind: Instance
+metadata:
+  annotations:
+    meta.upbound.io/example-id: compute/v1beta1/instance
+  labels:
+    testing.upbound.io/example-name: example-instance
+  name: example-instance
+spec:
+  forProvider:
+    hostname: example-instance
+    size: g4s.xsmall
+    diskImage: ${data.civo_disk_image_id}
+    region: ${data.civo_default_region}
+    notes: example instance
+    tags:
+      - example
+    networkIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-instance
+    firewallIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-instance
+    sshkeyIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-instance
+
+---
+
+apiVersion: compute.civo.upbound.io/v1beta1
+kind: SSHKey
+metadata:
+  annotations:
+    meta.upbound.io/example-id: compute/v1beta1/instance
+  labels:
+    testing.upbound.io/example-name: example-instance
+  name: example-instance
+spec:
+  forProvider:
+    name: example-instance
+    publicKey: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICU9OUV4vLqZFjdO74i5ex9EWQWLPgzLV5hrmi11Rp02
+
+---
+
+apiVersion: vpc.civo.upbound.io/v1beta1
+kind: Network
+metadata:
+  annotations:
+    meta.upbound.io/example-id: compute/v1beta1/instance
+  labels:
+    testing.upbound.io/example-name: example-instance
+  name: example-instance
+spec:
+  forProvider:
+    label: example-instance
+    region: ${data.civo_default_region}
+
+---
+
+apiVersion: vpc.civo.upbound.io/v1beta1
+kind: Firewall
+metadata:
+  annotations:
+    meta.upbound.io/example-id: compute/v1beta1/instance
+  labels:
+    testing.upbound.io/example-name: example-instance
+  name: example-instance
+spec:
+  forProvider:
+    name: example-instance
+    region: ${data.civo_default_region}
+    networkIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-instance
+    createDefaultRules: true

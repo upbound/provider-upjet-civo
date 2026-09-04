@@ -1,6 +1,12 @@
 [
 "civo_dns_domain_name",
 "civo_dns_domain_record",
+"civo_instance",
+"civo_object_store",
+"civo_object_store_credential",
+"civo_ssh_key",
+"civo_volume",
+"civo_volume_attachment",
 "civo_vpc_firewall",
 "civo_vpc_network",
 "civo_vpc_reserved_ip",

@@ -10,3 +10,20 @@ metadata:
 spec:
   forProvider:
     name: nginx-www
+
+---
+
+apiVersion: compute.civo.m.upbound.io/v1beta1
+kind: Instance
+metadata:
+  annotations:
+    meta.upbound.io/example-id: vpc/v1beta1/reservedip
+  labels:
+    testing.upbound.io/example-name: webserver
+  name: webserver
+  namespace: upbound-system
+spec:
+  forProvider:
+    reservedIpv4Selector:
+      matchLabels:
+        testing.upbound.io/example-name: www
