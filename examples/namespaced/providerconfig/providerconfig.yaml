@@ -1,0 +1,16 @@
+apiVersion: civo.m.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: default
+  namespace: upbound-system
+spec:
+  # region sets the default Civo region (for example LON1, NYC1, FRA1 or PHX1)
+  # for managed resources that do not set their own region.
+  # region: LON1
+  credentials:
+    source: Secret
+    # The secret reference is namespace-local: it resolves to the namespace of
+    # the referencing managed resource.
+    secretRef:
+      name: civo-creds
+      key: creds

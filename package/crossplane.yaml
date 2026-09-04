@@ -1,0 +1,20 @@
+apiVersion: meta.pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-civo
+  annotations:
+    meta.crossplane.io/maintainer: Upbound <support@upbound.io>
+    meta.crossplane.io/source: github.com/upbound/provider-upjet-civo
+    meta.crossplane.io/license: Apache-2.0
+    meta.crossplane.io/description: |
+      Upbound's Crossplane provider to manage Civo services in Kubernetes.
+    meta.crossplane.io/readme: |
+      Provider Civo is a Crossplane provider for [Civo](https://www.civo.com/)
+      developed by Upbound.
+      Available resources and their fields can be found in the [Upbound
+      Marketplace](https://marketplace.upbound.io/providers/upbound/provider-civo).
+spec:
+  crossplane:
+    version: ">=v1.14.0-0"
+  capabilities:
+  - SafeStart
