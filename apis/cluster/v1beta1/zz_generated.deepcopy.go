@@ -81,8 +81,8 @@ func (in *ProviderConfigSpec) DeepCopyInto(out *ProviderConfigSpec) {
 		(*in).DeepCopyInto(*out)
 	}
 	in.Credentials.DeepCopyInto(&out.Credentials)
-	if in.Region != nil {
-		in, out := &in.Region, &out.Region
+	if in.APIEndpoint != nil {
+		in, out := &in.APIEndpoint, &out.APIEndpoint
 		*out = new(string)
 		**out = **in
 	}

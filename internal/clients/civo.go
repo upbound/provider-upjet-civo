@@ -6,12 +6,15 @@ import (
 
 	"github.com/civo/terraform-provider-civo/civo"
 	"github.com/crossplane/crossplane-runtime/v2/pkg/errors"
+	"github.com/crossplane/crossplane-runtime/v2/pkg/fieldpath"
 	"github.com/crossplane/crossplane-runtime/v2/pkg/resource"
 	xpv2 "github.com/crossplane/crossplane/apis/v2/core/v2"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	tjresource "github.com/crossplane/upjet/v2/pkg/resource"
 	"github.com/crossplane/upjet/v2/pkg/terraform"
 
 	clusterv1beta1 "github.com/upbound/provider-civo/apis/cluster/v1beta1"
@@ -26,8 +29,17 @@ const (
 	errExtractCredentials   = "cannot extract credentials"
 	errUnmarshalCredentials = "cannot unmarshal civo credentials as JSON"
 
-	keyToken  = "token"
-	keyRegion = "region"
+	keyToken       = "token"
+	keyRegion      = "region"
+	keyAPIEndpoint = "api_endpoint"
+
+	// tfResourceNodePool is the only resource whose region never reaches
+	// Terraform: the upstream resource has no region attribute and its read
+	// uses the provider-level client as is, so the region declared on the
+	// managed resource is applied to the provider client instead. Every other
+	// resource scopes its own API calls to its region upstream.
+	tfResourceNodePool = "civo_kubernetes_node_pool"
+	regionFieldPath    = "spec.forProvider.region"
 )
 
 // TerraformSetupBuilder builds a terraform.SetupFn that configures the
@@ -49,7 +61,12 @@ func TerraformSetupBuilder() terraform.SetupFn {
 			return terraform.Setup{}, errors.Wrap(err, errUnmarshalCredentials)
 		}
 
-		cfg, err := buildConfiguration(creds, pcSpec.Region)
+		region, err := nodePoolRegion(mg)
+		if err != nil {
+			return terraform.Setup{}, errors.Wrap(err, "cannot resolve the region for the provider client")
+		}
+
+		cfg, err := buildConfiguration(creds, region, pcSpec.APIEndpoint)
 		if err != nil {
 			return terraform.Setup{}, errors.Wrap(err, "cannot build provider configuration")
 		}
@@ -62,8 +79,11 @@ func TerraformSetupBuilder() terraform.SetupFn {
 // buildConfiguration maps the credentials secret and the ProviderConfig spec
 // onto the Civo provider configuration block. The API token is passed through
 // the "token" attribute so that every ProviderConfig gets its own client
-// instead of sharing the process-global CIVO_TOKEN environment variable.
-func buildConfiguration(creds map[string]string, region *string) (map[string]any, error) {
+// instead of sharing the process-global CIVO_TOKEN environment variable. The
+// client region is only set for node pools and the API endpoint only when the
+// ProviderConfig declares one, so the upstream defaults (the account's default
+// region, the public https://api.civo.com) apply otherwise.
+func buildConfiguration(creds map[string]string, region, apiEndpoint *string) (map[string]any, error) {
 	token := creds[keyToken]
 	if token == "" {
 		return nil, errors.New(`credentials secret has no "token" key`)
@@ -72,7 +92,34 @@ func buildConfiguration(creds map[string]string, region *string) (map[string]any
 	if region != nil && *region != "" {
 		cfg[keyRegion] = *region
 	}
+	if apiEndpoint != nil && *apiEndpoint != "" {
+		cfg[keyAPIEndpoint] = *apiEndpoint
+	}
 	return cfg, nil
+}
+
+// nodePoolRegion returns the region the provider client is scoped to for the
+// given managed resource: the region declared on a node pool when there is
+// one, otherwise nil so that the client is not scoped to any region. Global
+// resources such as DNS domains or SSH keys never need one, and regional
+// resources scope their own API calls to their spec region upstream.
+func nodePoolRegion(mg resource.Managed) (*string, error) {
+	tr, ok := mg.(tjresource.Terraformed)
+	if !ok || tr.GetTerraformResourceType() != tfResourceNodePool {
+		return nil, nil
+	}
+	u, err := runtime.DefaultUnstructuredConverter.ToUnstructured(mg)
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot convert the managed resource to unstructured")
+	}
+	region, err := fieldpath.Pave(u).GetString(regionFieldPath)
+	if fieldpath.IsNotFound(err) || (err == nil && region == "") {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot read %s", regionFieldPath)
+	}
+	return &region, nil
 }
 
 // configureProviderMeta configures a fresh in-process SDKv2 provider instance
@@ -141,7 +188,7 @@ func resolveLegacy(ctx context.Context, client client.Client, mg resource.Legacy
 func resolveNamespacedSpec(spec namespacedv1beta1.NamespacedProviderConfigSpec, namespace string) namespacedv1beta1.ProviderConfigSpec {
 	resolved := namespacedv1beta1.ProviderConfigSpec{
 		ReconciliationPolicy: spec.ReconciliationPolicy,
-		Region:               spec.Region,
+		APIEndpoint:          spec.APIEndpoint,
 		Credentials: namespacedv1beta1.ProviderCredentials{
 			Source: spec.Credentials.Source,
 			CommonCredentialSelectors: xpv2.CommonCredentialSelectors{

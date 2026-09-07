@@ -1,0 +1,13 @@
+apiVersion: vpc.civo.m.upbound.io/v1beta1
+kind: ReservedIP
+metadata:
+  annotations:
+    meta.upbound.io/example-id: vpc/v1beta1/reservedip
+  labels:
+    testing.upbound.io/example-name: example-reservedip
+  name: example-reservedip
+  namespace: upbound-system
+spec:
+  forProvider:
+    name: example-reservedip
+    region: ${data.civo_default_region}

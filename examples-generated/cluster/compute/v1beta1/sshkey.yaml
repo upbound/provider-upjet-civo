@@ -1,0 +1,12 @@
+apiVersion: compute.civo.upbound.io/v1beta1
+kind: SSHKey
+metadata:
+  annotations:
+    meta.upbound.io/example-id: compute/v1beta1/sshkey
+  labels:
+    testing.upbound.io/example-name: my-user
+  name: my-user
+spec:
+  forProvider:
+    name: my-user
+    publicKey: ${file("~/.ssh/id_rsa.pub")}

@@ -1,0 +1,62 @@
+apiVersion: kubernetes.civo.m.upbound.io/v1beta1
+kind: Cluster
+metadata:
+  annotations:
+    meta.upbound.io/example-id: kubernetes/v1beta1/cluster
+  labels:
+    testing.upbound.io/example-name: example-cluster
+  name: example-cluster
+  namespace: upbound-system
+spec:
+  forProvider:
+    name: example-cluster
+    region: ${data.civo_default_region}
+    writeKubeconfig: true
+    pools:
+      label: example-cluster
+      size: g4s.kube.xsmall
+      nodeCount: 1
+    networkIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-cluster
+    firewallIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-cluster
+  writeConnectionSecretToRef:
+    name: example-cluster-kubeconfig
+
+---
+
+apiVersion: vpc.civo.m.upbound.io/v1beta1
+kind: Network
+metadata:
+  annotations:
+    meta.upbound.io/example-id: kubernetes/v1beta1/cluster
+  labels:
+    testing.upbound.io/example-name: example-cluster
+  name: example-cluster
+  namespace: upbound-system
+spec:
+  forProvider:
+    label: example-cluster
+    region: ${data.civo_default_region}
+
+---
+
+apiVersion: vpc.civo.m.upbound.io/v1beta1
+kind: Firewall
+metadata:
+  annotations:
+    meta.upbound.io/example-id: kubernetes/v1beta1/cluster
+  labels:
+    testing.upbound.io/example-name: example-cluster
+  name: example-cluster
+  namespace: upbound-system
+spec:
+  forProvider:
+    name: example-cluster
+    region: ${data.civo_default_region}
+    networkIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-cluster
+    createDefaultRules: true

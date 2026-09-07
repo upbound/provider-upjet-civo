@@ -9,14 +9,46 @@ import (
 
 	"github.com/crossplane/upjet/v2/pkg/controller"
 
+	instance "github.com/upbound/provider-civo/internal/controller/cluster/compute/instance"
+	sshkey "github.com/upbound/provider-civo/internal/controller/cluster/compute/sshkey"
+	database "github.com/upbound/provider-civo/internal/controller/cluster/database/database"
+	domain "github.com/upbound/provider-civo/internal/controller/cluster/dns/domain"
+	record "github.com/upbound/provider-civo/internal/controller/cluster/dns/record"
+	cluster "github.com/upbound/provider-civo/internal/controller/cluster/kubernetes/cluster"
+	nodepool "github.com/upbound/provider-civo/internal/controller/cluster/kubernetes/nodepool"
 	providerconfig "github.com/upbound/provider-civo/internal/controller/cluster/providerconfig"
+	objectstore "github.com/upbound/provider-civo/internal/controller/cluster/storage/objectstore"
+	objectstorecredential "github.com/upbound/provider-civo/internal/controller/cluster/storage/objectstorecredential"
+	volume "github.com/upbound/provider-civo/internal/controller/cluster/storage/volume"
+	volumeattachment "github.com/upbound/provider-civo/internal/controller/cluster/storage/volumeattachment"
+	firewall "github.com/upbound/provider-civo/internal/controller/cluster/vpc/firewall"
+	network "github.com/upbound/provider-civo/internal/controller/cluster/vpc/network"
+	reservedip "github.com/upbound/provider-civo/internal/controller/cluster/vpc/reservedip"
+	reservedipassignment "github.com/upbound/provider-civo/internal/controller/cluster/vpc/reservedipassignment"
+	subnet "github.com/upbound/provider-civo/internal/controller/cluster/vpc/subnet"
 )
 
 // Setup creates all controllers with the supplied logger and adds them to
 // the supplied manager.
 func Setup(mgr ctrl.Manager, o controller.Options) error {
 	for _, setup := range []func(ctrl.Manager, controller.Options) error{
+		instance.Setup,
+		sshkey.Setup,
+		database.Setup,
+		domain.Setup,
+		record.Setup,
+		cluster.Setup,
+		nodepool.Setup,
 		providerconfig.Setup,
+		objectstore.Setup,
+		objectstorecredential.Setup,
+		volume.Setup,
+		volumeattachment.Setup,
+		firewall.Setup,
+		network.Setup,
+		reservedip.Setup,
+		reservedipassignment.Setup,
+		subnet.Setup,
 	} {
 		if err := setup(mgr, o); err != nil {
 			return err
@@ -29,7 +61,23 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 // the supplied manager gated.
 func SetupGated(mgr ctrl.Manager, o controller.Options) error {
 	for _, setup := range []func(ctrl.Manager, controller.Options) error{
+		instance.SetupGated,
+		sshkey.SetupGated,
+		database.SetupGated,
+		domain.SetupGated,
+		record.SetupGated,
+		cluster.SetupGated,
+		nodepool.SetupGated,
 		providerconfig.SetupGated,
+		objectstore.SetupGated,
+		objectstorecredential.SetupGated,
+		volume.SetupGated,
+		volumeattachment.SetupGated,
+		firewall.SetupGated,
+		network.SetupGated,
+		reservedip.SetupGated,
+		reservedipassignment.SetupGated,
+		subnet.SetupGated,
 	} {
 		if err := setup(mgr, o); err != nil {
 			return err
@@ -41,7 +89,23 @@ func SetupGated(mgr ctrl.Manager, o controller.Options) error {
 // SetupWebhookWithManager registers conversion webhooks for all resource kinds in the group.
 func SetupWebhookWithManager(mgr ctrl.Manager) error {
 	for _, setup := range []func(ctrl.Manager) error{
+		instance.SetupWebhookWithManager,
+		sshkey.SetupWebhookWithManager,
+		database.SetupWebhookWithManager,
+		domain.SetupWebhookWithManager,
+		record.SetupWebhookWithManager,
+		cluster.SetupWebhookWithManager,
+		nodepool.SetupWebhookWithManager,
 		providerconfig.SetupWebhookWithManager,
+		objectstore.SetupWebhookWithManager,
+		objectstorecredential.SetupWebhookWithManager,
+		volume.SetupWebhookWithManager,
+		volumeattachment.SetupWebhookWithManager,
+		firewall.SetupWebhookWithManager,
+		network.SetupWebhookWithManager,
+		reservedip.SetupWebhookWithManager,
+		reservedipassignment.SetupWebhookWithManager,
+		subnet.SetupWebhookWithManager,
 	} {
 		if err := setup(mgr); err != nil {
 			return err

@@ -1,0 +1,31 @@
+apiVersion: dns.civo.upbound.io/v1beta1
+kind: Record
+metadata:
+  annotations:
+    meta.upbound.io/example-id: dns/v1beta1/record
+  labels:
+    testing.upbound.io/example-name: example-record
+  name: example-record
+spec:
+  forProvider:
+    domainIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-record
+    name: www
+    type: A
+    value: 192.0.2.10
+    ttl: 600
+
+---
+
+apiVersion: dns.civo.upbound.io/v1beta1
+kind: Domain
+metadata:
+  annotations:
+    meta.upbound.io/example-id: dns/v1beta1/record
+  labels:
+    testing.upbound.io/example-name: example-record
+  name: example-record
+spec:
+  forProvider:
+    name: ${Rand.RFC1123Subdomain}.example

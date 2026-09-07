@@ -61,7 +61,6 @@ kind: ProviderConfig
 metadata:
   name: default
 spec:
-  region: LON1
   credentials:
     source: Secret
     secretRef:
@@ -81,8 +80,22 @@ and [`examples/namespaced/`](examples/namespaced/).
 |---|---|---|
 | `spec.credentials.source` | Yes | One of `Secret`, `InjectedIdentity`, `Environment`, `Filesystem` |
 | `spec.credentials.secretRef` | When source=Secret | Reference to the credentials Secret |
-| `spec.region` | No | Default Civo region (for example `LON1`, `NYC1`, `FRA1`, `PHX1`) for managed resources that do not set their own; without it every resource must set a region |
+| `spec.apiEndpoint` | No | Base URL of the Civo API; defaults to the public `https://api.civo.com`, set it only when Civo has given you a dedicated endpoint |
 | `spec.reconciliationPolicy` | No | Rate-limiting policy for reconciliation |
+
+## Regions
+
+A `ProviderConfig` is not tied to a region. Every regional managed resource
+takes its region in `spec.forProvider.region` (for example `LON1`, `NYC1`,
+`FRA1` or `PHX1`); when omitted, the resource is created in the account's
+default region. Global resources (`dns` `Domain` and `Record`, `compute`
+`SSHKey`) have no region. Resource IDs such as networks and disk images are
+region-scoped, so references between resources must stay within one region.
+
+`kubernetes` `NodePool` also takes `spec.forProvider.region` and needs it
+whenever its cluster is outside the account's default region: the upstream
+Terraform resource has no region attribute, so the provider applies this value
+to the Civo API client for every call made for that resource instead.
 
 ## Developing
 

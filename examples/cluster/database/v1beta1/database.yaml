@@ -1,0 +1,59 @@
+apiVersion: database.civo.upbound.io/v1beta1
+kind: Database
+metadata:
+  annotations:
+    meta.upbound.io/example-id: database/v1beta1/database
+  labels:
+    testing.upbound.io/example-name: example-database
+  name: example-database
+spec:
+  forProvider:
+    name: example-database-${Rand.RFC1123Subdomain}
+    engine: PostgreSQL
+    version: "17"
+    size: g3.db.small
+    nodes: 1
+    region: ${data.civo_default_region}
+    networkIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-database
+    firewallIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-database
+  writeConnectionSecretToRef:
+    name: example-database-conn
+    namespace: upbound-system
+
+---
+
+apiVersion: vpc.civo.upbound.io/v1beta1
+kind: Network
+metadata:
+  annotations:
+    meta.upbound.io/example-id: database/v1beta1/database
+  labels:
+    testing.upbound.io/example-name: example-database
+  name: example-database
+spec:
+  forProvider:
+    label: example-database
+    region: ${data.civo_default_region}
+
+---
+
+apiVersion: vpc.civo.upbound.io/v1beta1
+kind: Firewall
+metadata:
+  annotations:
+    meta.upbound.io/example-id: database/v1beta1/database
+  labels:
+    testing.upbound.io/example-name: example-database
+  name: example-database
+spec:
+  forProvider:
+    name: example-database
+    region: ${data.civo_default_region}
+    networkIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-database
+    createDefaultRules: true

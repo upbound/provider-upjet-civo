@@ -55,6 +55,13 @@ spec:
               references omit the namespace: they implicitly resolve to the namespace of
               the referencing managed resource.
             properties:
+              apiEndpoint:
+                description: |-
+                  APIEndpoint is the base URL of the Civo API, for example
+                  https://api.civo.com. Leave it unset for the public Civo cloud; set it
+                  only when Civo has given you a dedicated endpoint.
+                pattern: ^https?://
+                type: string
               credentials:
                 description: Credentials required to authenticate to this provider.
                 properties:
@@ -143,12 +150,6 @@ spec:
                   rule: '!has(self.exponentialFailureRateLimiter) || !has(self.exponentialFailureRateLimiter.baseDelay)
                     || has(self.exponentialFailureRateLimiter.maxDelay) || duration(self.exponentialFailureRateLimiter.baseDelay)
                     <= duration(''60s'')'
-              region:
-                description: |-
-                  Region is the default Civo region (for example LON1, NYC1, FRA1 or PHX1)
-                  applied to managed resources that do not set their own region. When
-                  omitted, every managed resource must set a region explicitly.
-                type: string
             required:
             - credentials
             type: object

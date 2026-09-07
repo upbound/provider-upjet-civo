@@ -20,11 +20,12 @@ type ProviderConfigSpec struct {
 	// Credentials required to authenticate to this provider.
 	Credentials ProviderCredentials `json:"credentials"`
 
-	// Region is the default Civo region (for example LON1, NYC1, FRA1 or PHX1)
-	// applied to managed resources that do not set their own region. When
-	// omitted, every managed resource must set a region explicitly.
+	// APIEndpoint is the base URL of the Civo API, for example
+	// https://api.civo.com. Leave it unset for the public Civo cloud; set it
+	// only when Civo has given you a dedicated endpoint.
 	// +kubebuilder:validation:Optional
-	Region *string `json:"region,omitempty"`
+	// +kubebuilder:validation:Pattern=`^https?://`
+	APIEndpoint *string `json:"apiEndpoint,omitempty"`
 }
 
 // ProviderCredentials required to authenticate. The secret reference carries an
@@ -49,11 +50,12 @@ type NamespacedProviderConfigSpec struct {
 	// Credentials required to authenticate to this provider.
 	Credentials NamespacedProviderCredentials `json:"credentials"`
 
-	// Region is the default Civo region (for example LON1, NYC1, FRA1 or PHX1)
-	// applied to managed resources that do not set their own region. When
-	// omitted, every managed resource must set a region explicitly.
+	// APIEndpoint is the base URL of the Civo API, for example
+	// https://api.civo.com. Leave it unset for the public Civo cloud; set it
+	// only when Civo has given you a dedicated endpoint.
 	// +kubebuilder:validation:Optional
-	Region *string `json:"region,omitempty"`
+	// +kubebuilder:validation:Pattern=`^https?://`
+	APIEndpoint *string `json:"apiEndpoint,omitempty"`
 }
 
 // NamespacedProviderCredentials required to authenticate. The secret reference

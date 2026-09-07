@@ -1,0 +1,34 @@
+apiVersion: storage.civo.m.upbound.io/v1beta1
+kind: Volume
+metadata:
+  annotations:
+    meta.upbound.io/example-id: storage/v1beta1/volume
+    upjet.upbound.io/manual-intervention: A Civo volume only leaves the creating state once its network hosts an instance, so a standalone Volume never becomes Ready and cannot be tested self-contained; storage/v1beta1/volumeattachment.yaml covers the tested path.
+  labels:
+    testing.upbound.io/example-name: example-volume
+  name: example-volume
+  namespace: upbound-system
+spec:
+  forProvider:
+    name: example-volume
+    sizeGb: 5
+    region: ${data.civo_default_region}
+    networkIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example-volume
+
+---
+
+apiVersion: vpc.civo.m.upbound.io/v1beta1
+kind: Network
+metadata:
+  annotations:
+    meta.upbound.io/example-id: storage/v1beta1/volume
+  labels:
+    testing.upbound.io/example-name: example-volume
+  name: example-volume
+  namespace: upbound-system
+spec:
+  forProvider:
+    label: example-volume
+    region: ${data.civo_default_region}
