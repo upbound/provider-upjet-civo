@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -16,8 +18,6 @@ import (
 	clustervpcv1beta1 "github.com/upbound/provider-civo/apis/cluster/vpc/v1beta1"
 	namespacedkubernetesv1beta1 "github.com/upbound/provider-civo/apis/namespaced/kubernetes/v1beta1"
 	namespacedv1beta1 "github.com/upbound/provider-civo/apis/namespaced/v1beta1"
-
-	"github.com/crossplane/upjet/v2/pkg/terraform"
 )
 
 func TestResolveNamespacedSpec(t *testing.T) {
@@ -107,74 +107,178 @@ func TestResolveNamespacedSpec(t *testing.T) {
 
 func TestBuildConfiguration(t *testing.T) {
 	type args struct {
-		creds       map[string]string
-		region      *string
-		apiEndpoint *string
+		credentialsFile string
+		region          *string
+		apiEndpoint     *string
 	}
 
 	cases := map[string]struct {
-		args            args
-		want            map[string]any
-		wantErrContains string
+		args args
+		want map[string]any
 	}{
-		"TokenOnly": {
-			args: args{creds: map[string]string{"token": "civo-token"}},
-			want: map[string]any{"token": "civo-token"},
+		"FileOnly": {
+			args: args{credentialsFile: "/tmp/provider-civo/civo-credentials-uid-1.json"},
+			want: map[string]any{"credentials_file": "/tmp/provider-civo/civo-credentials-uid-1.json"},
 		},
-		"TokenAndRegion": {
-			args: args{creds: map[string]string{"token": "civo-token"}, region: new("LON1")},
-			want: map[string]any{"token": "civo-token", "region": "LON1"},
+		"FileAndRegion": {
+			args: args{credentialsFile: "/tmp/provider-civo/civo-credentials-uid-1.json", region: new("LON1")},
+			want: map[string]any{"credentials_file": "/tmp/provider-civo/civo-credentials-uid-1.json", "region": "LON1"},
 		},
 		"EmptyRegionOmitted": {
-			args: args{creds: map[string]string{"token": "civo-token"}, region: new("")},
-			want: map[string]any{"token": "civo-token"},
+			args: args{credentialsFile: "/tmp/provider-civo/civo-credentials-uid-1.json", region: new("")},
+			want: map[string]any{"credentials_file": "/tmp/provider-civo/civo-credentials-uid-1.json"},
 		},
-		"TokenAndAPIEndpoint": {
-			args: args{creds: map[string]string{"token": "civo-token"}, apiEndpoint: new("https://api.example.civo.internal")},
-			want: map[string]any{"token": "civo-token", "api_endpoint": "https://api.example.civo.internal"},
+		"FileAndAPIEndpoint": {
+			args: args{credentialsFile: "/tmp/provider-civo/civo-credentials-uid-1.json", apiEndpoint: new("https://api.example.civo.internal")},
+			want: map[string]any{"credentials_file": "/tmp/provider-civo/civo-credentials-uid-1.json", "api_endpoint": "https://api.example.civo.internal"},
 		},
 		"EmptyAPIEndpointOmitted": {
-			args: args{creds: map[string]string{"token": "civo-token"}, apiEndpoint: new("")},
-			want: map[string]any{"token": "civo-token"},
+			args: args{credentialsFile: "/tmp/provider-civo/civo-credentials-uid-1.json", apiEndpoint: new("")},
+			want: map[string]any{"credentials_file": "/tmp/provider-civo/civo-credentials-uid-1.json"},
 		},
 		"AllFields": {
-			args: args{creds: map[string]string{"token": "civo-token"}, region: new("NYC1"), apiEndpoint: new("https://api.example.civo.internal")},
-			want: map[string]any{"token": "civo-token", "region": "NYC1", "api_endpoint": "https://api.example.civo.internal"},
-		},
-		"ExtraKeysIgnored": {
-			args: args{creds: map[string]string{"token": "civo-token", "unrelated": "x"}},
-			want: map[string]any{"token": "civo-token"},
-		},
-		"EmptyToken": {
-			args:            args{creds: map[string]string{"token": ""}},
-			wantErrContains: `credentials secret has no "token" key`,
-		},
-		"MissingToken": {
-			args:            args{creds: map[string]string{}},
-			wantErrContains: `credentials secret has no "token" key`,
+			args: args{credentialsFile: "/tmp/provider-civo/civo-credentials-uid-1.json", region: new("NYC1"), apiEndpoint: new("https://api.example.civo.internal")},
+			want: map[string]any{"credentials_file": "/tmp/provider-civo/civo-credentials-uid-1.json", "region": "NYC1", "api_endpoint": "https://api.example.civo.internal"},
 		},
 	}
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			got, err := buildConfiguration(tc.args.creds, tc.args.region, tc.args.apiEndpoint)
-			if tc.wantErrContains != "" {
-				if err == nil {
-					t.Fatalf("expected error containing %q, got nil", tc.wantErrContains)
-				}
-				if !strings.Contains(err.Error(), tc.wantErrContains) {
-					t.Errorf("error %q does not contain %q", err.Error(), tc.wantErrContains)
-				}
-				return
-			}
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
+			got := buildConfiguration(tc.args.credentialsFile, tc.args.region, tc.args.apiEndpoint)
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("buildConfiguration() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
+}
+
+// credentialsFiles lists the credentials files in dir.
+func credentialsFiles(t *testing.T, dir string) []string {
+	t.Helper()
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatalf("cannot list %s: %v", dir, err)
+	}
+	var names []string
+	for _, e := range entries {
+		if strings.HasPrefix(e.Name(), "civo-credentials-") {
+			names = append(names, e.Name())
+		}
+	}
+	return names
+}
+
+func TestWriteCredentialsFile(t *testing.T) {
+	const uid = "0f6e2d1a-6b2c-4a19-9b7e-2f5c1d3e4a5b"
+
+	t.Run("WritesTheUpstreamFormat", func(t *testing.T) {
+		dir := t.TempDir()
+		path, err := writeCredentialsFile(dir, uid, "civo-token")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if filepath.Dir(path) != dir {
+			t.Errorf("file %s is not in %s", path, dir)
+		}
+		name := filepath.Base(path)
+		if !strings.HasPrefix(name, "civo-credentials-"+uid+"-") || !strings.HasSuffix(name, ".json") {
+			t.Errorf("unexpected file name %s", name)
+		}
+		info, err := os.Stat(path)
+		if err != nil {
+			t.Fatalf("cannot stat %s: %v", path, err)
+		}
+		if info.Mode().Perm() != 0o600 {
+			t.Errorf("file mode is %o, want 600", info.Mode().Perm())
+		}
+		content, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("cannot read %s: %v", path, err)
+		}
+		want := `{"apikeys":{"provider-civo":"civo-token"},"meta":{"current_apikey":"provider-civo"}}`
+		if diff := cmp.Diff(want, string(content)); diff != "" {
+			t.Errorf("file content mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("EveryCallGetsItsOwnFile", func(t *testing.T) {
+		dir := t.TempDir()
+		first, err := writeCredentialsFile(dir, uid, "civo-token")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		second, err := writeCredentialsFile(dir, uid, "civo-token")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if first == second {
+			t.Errorf("both calls returned %s", first)
+		}
+		if got := credentialsFiles(t, dir); len(got) != 2 {
+			t.Errorf("got files %v, want two", got)
+		}
+	})
+
+	t.Run("EmptyToken", func(t *testing.T) {
+		dir := t.TempDir()
+		_, err := writeCredentialsFile(dir, uid, "")
+		if err == nil || !strings.Contains(err.Error(), `credentials secret has no "token" key`) {
+			t.Fatalf("got error %v, want the missing token error", err)
+		}
+		if got := credentialsFiles(t, dir); len(got) != 0 {
+			t.Errorf("got files %v, want none", got)
+		}
+	})
+
+	t.Run("MissingDirectory", func(t *testing.T) {
+		_, err := writeCredentialsFile(filepath.Join(t.TempDir(), "missing"), uid, "civo-token")
+		if err == nil || !strings.Contains(err.Error(), "cannot create the credentials file") {
+			t.Fatalf("got error %v, want a create error", err)
+		}
+	})
+}
+
+func TestPrepareCredentialsDir(t *testing.T) {
+	t.Run("CreatesTheDirectory", func(t *testing.T) {
+		dir := filepath.Join(t.TempDir(), "provider-civo")
+		if err := PrepareCredentialsDir(dir); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		info, err := os.Stat(dir)
+		if err != nil {
+			t.Fatalf("cannot stat %s: %v", dir, err)
+		}
+		if !info.IsDir() || info.Mode().Perm() != 0o700 {
+			t.Errorf("got mode %o, want a directory with mode 700", info.Mode().Perm())
+		}
+	})
+
+	t.Run("RemovesStaleCredentialsFilesOnly", func(t *testing.T) {
+		dir := t.TempDir()
+		for _, name := range []string{"civo-credentials-uid-1.json", "civo-credentials-uid-2.json", "other.json"} {
+			if err := os.WriteFile(filepath.Join(dir, name), []byte("{}"), 0o600); err != nil {
+				t.Fatalf("cannot write %s: %v", name, err)
+			}
+		}
+		if err := os.Mkdir(filepath.Join(dir, "civo-credentials-dir.json"), 0o700); err != nil {
+			t.Fatalf("cannot create the directory: %v", err)
+		}
+		if err := PrepareCredentialsDir(dir); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			t.Fatalf("cannot list %s: %v", dir, err)
+		}
+		got := make([]string, 0, len(entries))
+		for _, e := range entries {
+			got = append(got, e.Name())
+		}
+		want := []string{"civo-credentials-dir.json", "other.json"}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("directory content mismatch (-want +got):\n%s", diff)
+		}
+	})
 }
 
 func TestNodePoolRegion(t *testing.T) {
@@ -237,10 +341,11 @@ func TestNodePoolRegion(t *testing.T) {
 	}
 }
 
-// TestConfigureProviderMeta drives the real upstream provider configure
-// function against a local HTTP server, so it catches an upstream change to
-// how the token, the region or the API endpoint reach the Civo API client.
-func TestConfigureProviderMeta(t *testing.T) {
+// TestConfigure drives the real upstream provider configure function against
+// a local HTTP server, with the token handed over through the credentials
+// file, so it catches an upstream change to the credentials file parser or to
+// how the region and the API endpoint reach the Civo API client.
+func TestConfigure(t *testing.T) {
 	type request struct {
 		Path          string
 		Authorization string
@@ -263,7 +368,9 @@ func TestConfigureProviderMeta(t *testing.T) {
 	unreachable.Close()
 
 	type args struct {
-		configuration map[string]any
+		token       string
+		region      *string
+		apiEndpoint *string
 	}
 	type want struct {
 		client      client
@@ -275,7 +382,7 @@ func TestConfigureProviderMeta(t *testing.T) {
 		want want
 	}{
 		"TokenRegionAndEndpointReachTheClient": {
-			args: args{configuration: map[string]any{"token": "civo-token", "region": "LON1", "api_endpoint": server.URL}},
+			args: args{token: "civo-token", region: new("LON1"), apiEndpoint: new(server.URL)},
 			want: want{client: client{
 				BaseURL: server.URL,
 				Region:  "LON1",
@@ -284,7 +391,7 @@ func TestConfigureProviderMeta(t *testing.T) {
 			}},
 		},
 		"NoRegionLeavesTheClientUnscoped": {
-			args: args{configuration: map[string]any{"token": "civo-token", "api_endpoint": server.URL}},
+			args: args{token: "civo-token", apiEndpoint: new(server.URL)},
 			want: want{client: client{
 				BaseURL: server.URL,
 				APIKey:  "civo-token",
@@ -292,8 +399,12 @@ func TestConfigureProviderMeta(t *testing.T) {
 			}},
 		},
 		"UnreachableEndpoint": {
-			args: args{configuration: map[string]any{"token": "civo-token", "api_endpoint": unreachable.URL}},
+			args: args{token: "civo-token", apiEndpoint: new(unreachable.URL)},
 			want: want{errContains: "connecting to Civo's API"},
+		},
+		"EmptyToken": {
+			args: args{apiEndpoint: new(server.URL)},
+			want: want{errContains: `credentials secret has no "token" key`},
 		},
 	}
 
@@ -303,8 +414,11 @@ func TestConfigureProviderMeta(t *testing.T) {
 				t.Setenv(key, "")
 			}
 			seen = request{}
-			ps := terraform.Setup{Configuration: tc.args.configuration}
-			err := configureProviderMeta(context.Background(), &ps)
+			dir := t.TempDir()
+			ps, err := configure(context.Background(), dir, "uid-1", tc.args.token, tc.args.region, tc.args.apiEndpoint)
+			if got := credentialsFiles(t, dir); len(got) != 0 {
+				t.Errorf("credentials files left behind: %v", got)
+			}
 			if tc.want.errContains != "" {
 				if err == nil {
 					t.Fatalf("expected error containing %q, got nil", tc.want.errContains)
@@ -317,13 +431,19 @@ func TestConfigureProviderMeta(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
+			if _, ok := ps.Configuration["token"]; ok {
+				t.Errorf("the configuration still carries the token attribute")
+			}
+			if path, ok := ps.Configuration["credentials_file"].(string); !ok || filepath.Dir(path) != dir {
+				t.Errorf("credentials_file is %v, want a file in %s", ps.Configuration["credentials_file"], dir)
+			}
 			apiClient, ok := ps.Meta.(*civogo.Client)
 			if !ok {
 				t.Fatalf("provider meta is %T, want *civogo.Client", ps.Meta)
 			}
 			got := client{BaseURL: apiClient.BaseURL.String(), Region: apiClient.Region, APIKey: apiClient.APIKey, Request: seen}
 			if diff := cmp.Diff(tc.want.client, got); diff != "" {
-				t.Errorf("configureProviderMeta() mismatch (-want +got):\n%s", diff)
+				t.Errorf("configure() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}

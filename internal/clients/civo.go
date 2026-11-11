@@ -3,6 +3,9 @@ package clients
 import (
 	"context"
 	"encoding/json"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/civo/terraform-provider-civo/civo"
 	"github.com/crossplane/crossplane-runtime/v2/pkg/errors"
@@ -29,9 +32,27 @@ const (
 	errExtractCredentials   = "cannot extract credentials"
 	errUnmarshalCredentials = "cannot unmarshal civo credentials as JSON"
 
-	keyToken       = "token"
-	keyRegion      = "region"
-	keyAPIEndpoint = "api_endpoint"
+	keyToken           = "token"
+	keyCredentialsFile = "credentials_file"
+	keyRegion          = "region"
+	keyAPIEndpoint     = "api_endpoint"
+
+	// EnvToken is the environment variable the upstream provider reads before
+	// the credentials file. Set on the provider process it would win over
+	// every ProviderConfig, so the provider refuses to start with it.
+	EnvToken = "CIVO_TOKEN"
+
+	// DefaultCredentialsDir is where the short-lived credentials files are
+	// written unless the --credentials-dir flag says otherwise.
+	DefaultCredentialsDir = "/tmp/provider-civo"
+
+	// credentialsAPIKeyName is the key the token is stored under in the
+	// credentials file. The upstream parser reads whichever key
+	// meta.current_apikey names, so the name only has to match itself.
+	credentialsAPIKeyName = "provider-civo"
+	credentialsFilePrefix = "civo-credentials-"
+	credentialsFileSuffix = ".json"
+	credentialsDirMode    = 0o700
 
 	// tfResourceNodePool is the only resource whose region never reaches
 	// Terraform: the upstream resource has no region attribute and its read
@@ -42,9 +63,20 @@ const (
 	regionFieldPath    = "spec.forProvider.region"
 )
 
+// credentialsFile is the format the upstream provider's credentials_file
+// parser expects, the one the Civo CLI writes to ~/.civo.json.
+type credentialsFile struct {
+	APIKeys map[string]string `json:"apikeys"`
+	Meta    struct {
+		CurrentAPIKey string `json:"current_apikey"`
+	} `json:"meta"`
+}
+
 // TerraformSetupBuilder builds a terraform.SetupFn that configures the
-// in-process Civo Terraform provider (no-fork, no terraform CLI).
-func TerraformSetupBuilder() terraform.SetupFn {
+// in-process Civo Terraform provider (no-fork, no terraform CLI). The API
+// token reaches the upstream provider through a credentials file written to
+// credentialsDir for the duration of one configure call.
+func TerraformSetupBuilder(credentialsDir string) terraform.SetupFn {
 	return func(ctx context.Context, client client.Client, mg resource.Managed) (terraform.Setup, error) {
 		pcSpec, err := resolveProviderConfig(ctx, client, mg)
 		if err != nil {
@@ -66,36 +98,96 @@ func TerraformSetupBuilder() terraform.SetupFn {
 			return terraform.Setup{}, errors.Wrap(err, "cannot resolve the region for the provider client")
 		}
 
-		cfg, err := buildConfiguration(creds, region, pcSpec.APIEndpoint)
-		if err != nil {
-			return terraform.Setup{}, errors.Wrap(err, "cannot build provider configuration")
-		}
-
-		ps := terraform.Setup{Configuration: cfg}
-		return ps, errors.Wrap(configureProviderMeta(ctx, &ps), "cannot configure the civo provider client")
+		return configure(ctx, credentialsDir, string(mg.GetUID()), creds[keyToken], region, pcSpec.APIEndpoint)
 	}
 }
 
-// buildConfiguration maps the credentials secret and the ProviderConfig spec
-// onto the Civo provider configuration block. The API token is passed through
-// the "token" attribute so that every ProviderConfig gets its own client
-// instead of sharing the process-global CIVO_TOKEN environment variable. The
-// client region is only set for node pools and the API endpoint only when the
-// ProviderConfig declares one, so the upstream defaults (the account's default
-// region, the public https://api.civo.com) apply otherwise.
-func buildConfiguration(creds map[string]string, region, apiEndpoint *string) (map[string]any, error) {
-	token := creds[keyToken]
-	if token == "" {
-		return nil, errors.New(`credentials secret has no "token" key`)
+// configure hands the token to the upstream provider through a credentials
+// file, configures a provider instance with it and removes the file again
+// before returning. Nothing reads the file after Configure: the token lives
+// in the Civo API client stored as provider meta from then on.
+func configure(ctx context.Context, credentialsDir, uid, token string, region, apiEndpoint *string) (terraform.Setup, error) {
+	path, err := writeCredentialsFile(credentialsDir, uid, token)
+	if err != nil {
+		return terraform.Setup{}, errors.Wrap(err, "cannot write the credentials file")
 	}
-	cfg := map[string]any{keyToken: token}
+	defer func() { _ = os.Remove(path) }()
+
+	ps := terraform.Setup{Configuration: buildConfiguration(path, region, apiEndpoint)}
+	return ps, errors.Wrap(configureProviderMeta(ctx, &ps), "cannot configure the civo provider client")
+}
+
+// writeCredentialsFile writes the token, in the upstream credentials file
+// format, to a new file in dir that only the provider's user can read, and
+// returns its path. The name carries the managed resource's UID and a random
+// part, so every call gets a file of its own.
+func writeCredentialsFile(dir, uid, token string) (string, error) {
+	if token == "" {
+		return "", errors.New(`credentials secret has no "token" key`)
+	}
+	cf := credentialsFile{APIKeys: map[string]string{credentialsAPIKeyName: token}}
+	cf.Meta.CurrentAPIKey = credentialsAPIKeyName
+	content, err := json.Marshal(cf)
+	if err != nil {
+		return "", errors.Wrap(err, "cannot encode the credentials file")
+	}
+	f, err := os.CreateTemp(dir, credentialsFilePrefix+uid+"-*"+credentialsFileSuffix)
+	if err != nil {
+		return "", errors.Wrap(err, "cannot create the credentials file")
+	}
+	if _, err := f.Write(content); err != nil {
+		_ = f.Close()
+		_ = os.Remove(f.Name())
+		return "", errors.Wrap(err, "cannot write the credentials file")
+	}
+	if err := f.Close(); err != nil {
+		_ = os.Remove(f.Name())
+		return "", errors.Wrap(err, "cannot close the credentials file")
+	}
+	return f.Name(), nil
+}
+
+// PrepareCredentialsDir creates the credentials directory, readable by the
+// provider's user only, and removes credentials files an earlier process left
+// behind, for example after a crash between writing one and configuring the
+// provider.
+func PrepareCredentialsDir(dir string) error {
+	if err := os.MkdirAll(dir, credentialsDirMode); err != nil {
+		return errors.Wrapf(err, "cannot create the credentials directory %s", dir)
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return errors.Wrapf(err, "cannot list the credentials directory %s", dir)
+	}
+	for _, e := range entries {
+		name := e.Name()
+		if e.IsDir() || !strings.HasPrefix(name, credentialsFilePrefix) || !strings.HasSuffix(name, credentialsFileSuffix) {
+			continue
+		}
+		if err := os.Remove(filepath.Join(dir, name)); err != nil && !os.IsNotExist(err) {
+			return errors.Wrapf(err, "cannot remove the stale credentials file %s", name)
+		}
+	}
+	return nil
+}
+
+// buildConfiguration maps the credentials file and the ProviderConfig spec
+// onto the Civo provider configuration block. The token is handed over
+// through "credentials_file" rather than the deprecated "token" attribute, and
+// through a file of its own per call rather than the process-global
+// CIVO_TOKEN environment variable, so that every ProviderConfig gets its own
+// client. The client region is only set for node pools and the API endpoint
+// only when the ProviderConfig declares one, so the upstream defaults (the
+// account's default region, the public https://api.civo.com) apply otherwise.
+func buildConfiguration(credentialsFile string, region, apiEndpoint *string) map[string]any {
+	cfg := map[string]any{keyCredentialsFile: credentialsFile}
 	if region != nil && *region != "" {
 		cfg[keyRegion] = *region
 	}
 	if apiEndpoint != nil && *apiEndpoint != "" {
 		cfg[keyAPIEndpoint] = *apiEndpoint
 	}
-	return cfg, nil
+	return cfg
 }
 
 // nodePoolRegion returns the region the provider client is scoped to for the

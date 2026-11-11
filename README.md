@@ -24,6 +24,43 @@ under Security > API Keys and store it as JSON:
 }
 ```
 
+### Credentials on disk
+
+The upstream Terraform provider takes the token from a credentials file. For
+every reconcile the provider writes the token to a file only its own user can
+read under `/tmp/provider-civo` (`--credentials-dir` flag, `CREDENTIALS_DIR`
+environment variable), configures the upstream provider with it and removes
+the file again. The file exists for one configure call: a few milliseconds
+plus the API round trip upstream makes to validate the token. To keep it off
+the node's disk, or when the container runs with a read-only root filesystem,
+mount a memory-backed volume at that path:
+
+```yaml
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
+metadata:
+  name: provider-civo
+spec:
+  deploymentTemplate:
+    spec:
+      selector: {}
+      template:
+        spec:
+          containers:
+          - name: package-runtime
+            volumeMounts:
+            - name: credentials
+              mountPath: /tmp/provider-civo
+          volumes:
+          - name: credentials
+            emptyDir:
+              medium: Memory
+```
+
+The provider refuses to start when `CIVO_TOKEN` is set in its environment: the
+upstream provider reads that variable before the credentials file, so every
+ProviderConfig would end up using it.
+
 ## Getting Started
 
 ### 1. Install the provider
