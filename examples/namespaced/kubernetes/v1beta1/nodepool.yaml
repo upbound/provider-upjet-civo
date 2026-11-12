@@ -9,9 +9,6 @@ metadata:
   namespace: upbound-system
 spec:
   forProvider:
-    # The upstream Terraform resource has no region of its own and would use
-    # the ProviderConfig region for every API call; setting it here scopes the
-    # API client to the cluster's region for this resource.
     region: ${data.civo_default_region}
     label: example-nodepool
     size: g4s.kube.xsmall
