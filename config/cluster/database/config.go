@@ -11,9 +11,6 @@ import (
 // Configure configures the database group
 func Configure(p *config.Provider) {
 	p.AddResourceConfigurator("civo_database", func(r *config.Resource) {
-		// Upstream leaves the generated password unmarked; keep it out of
-		// status and publish it as a connection detail instead.
-		r.TerraformResource.Schema["password"].Sensitive = true
 		r.References["firewall_id"] = config.Reference{
 			TerraformName: "civo_vpc_firewall",
 		}

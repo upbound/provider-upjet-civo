@@ -10,15 +10,12 @@ import (
 
 	"github.com/civo/terraform-provider-civo/civo"
 	"github.com/crossplane/crossplane-runtime/v2/pkg/errors"
-	"github.com/crossplane/crossplane-runtime/v2/pkg/fieldpath"
 	"github.com/crossplane/crossplane-runtime/v2/pkg/resource"
 	xpv2 "github.com/crossplane/crossplane/apis/v2/core/v2"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	tjresource "github.com/crossplane/upjet/v2/pkg/resource"
 	"github.com/crossplane/upjet/v2/pkg/terraform"
 
 	clusterv1beta1 "github.com/upbound/provider-civo/apis/cluster/v1beta1"
@@ -35,7 +32,6 @@ const (
 
 	keyToken           = "token"
 	keyCredentialsFile = "credentials_file"
-	keyRegion          = "region"
 	keyAPIEndpoint     = "api_endpoint"
 
 	// EnvToken is the environment variable the upstream provider reads before
@@ -54,14 +50,6 @@ const (
 	credentialsFilePrefix = "civo-credentials-"
 	credentialsFileSuffix = ".json"
 	credentialsDirMode    = 0o700
-
-	// tfResourceNodePool is the only resource whose region never reaches
-	// Terraform: the upstream resource has no region attribute and its read
-	// uses the provider-level client as is, so the region declared on the
-	// managed resource is applied to the provider client instead. Every other
-	// resource scopes its own API calls to its region upstream.
-	tfResourceNodePool = "civo_kubernetes_node_pool"
-	regionFieldPath    = "spec.forProvider.region"
 )
 
 // credentialsFileTTL bounds how long a credentials file stays on disk. The
@@ -101,12 +89,7 @@ func TerraformSetupBuilder(credentialsDir string) terraform.SetupFn {
 			return terraform.Setup{}, errors.Wrap(err, errUnmarshalCredentials)
 		}
 
-		region, err := nodePoolRegion(mg)
-		if err != nil {
-			return terraform.Setup{}, errors.Wrap(err, "cannot resolve the region for the provider client")
-		}
-
-		return configure(ctx, credentialsDir, string(mg.GetUID()), creds[keyToken], region, pcSpec.APIEndpoint)
+		return configure(ctx, credentialsDir, string(mg.GetUID()), creds[keyToken], pcSpec.APIEndpoint)
 	}
 }
 
@@ -115,7 +98,7 @@ func TerraformSetupBuilder(credentialsDir string) terraform.SetupFn {
 // when Configure returns, or after credentialsFileTTL at the latest. Nothing
 // reads the file after Configure: the token lives in the Civo API client
 // stored as provider meta from then on.
-func configure(ctx context.Context, credentialsDir, uid, token string, region, apiEndpoint *string) (terraform.Setup, error) {
+func configure(ctx context.Context, credentialsDir, uid, token string, apiEndpoint *string) (terraform.Setup, error) {
 	path, err := writeCredentialsFile(credentialsDir, uid, token)
 	if err != nil {
 		return terraform.Setup{}, errors.Wrap(err, "cannot write the credentials file")
@@ -124,7 +107,7 @@ func configure(ctx context.Context, credentialsDir, uid, token string, region, a
 	watchdog := time.AfterFunc(credentialsFileTTL, func() { _ = os.Remove(path) })
 	defer watchdog.Stop()
 
-	ps := terraform.Setup{Configuration: buildConfiguration(path, region, apiEndpoint)}
+	ps := terraform.Setup{Configuration: buildConfiguration(path, apiEndpoint)}
 	return ps, errors.Wrap(configureProviderMeta(ctx, &ps), "cannot configure the civo provider client")
 }
 
@@ -187,42 +170,16 @@ func PrepareCredentialsDir(dir string) error {
 // through "credentials_file" rather than the deprecated "token" attribute, and
 // through a file of its own per call rather than the process-global
 // CIVO_TOKEN environment variable, so that every ProviderConfig gets its own
-// client. The client region is only set for node pools and the API endpoint
-// only when the ProviderConfig declares one, so the upstream defaults (the
-// account's default region, the public https://api.civo.com) apply otherwise.
-func buildConfiguration(credentialsFile string, region, apiEndpoint *string) map[string]any {
+// client. The client is never scoped to a region, because every regional
+// resource scopes its own API calls upstream, and the API endpoint is only set
+// when the ProviderConfig declares one, so the public https://api.civo.com
+// applies otherwise.
+func buildConfiguration(credentialsFile string, apiEndpoint *string) map[string]any {
 	cfg := map[string]any{keyCredentialsFile: credentialsFile}
-	if region != nil && *region != "" {
-		cfg[keyRegion] = *region
-	}
 	if apiEndpoint != nil && *apiEndpoint != "" {
 		cfg[keyAPIEndpoint] = *apiEndpoint
 	}
 	return cfg
-}
-
-// nodePoolRegion returns the region the provider client is scoped to for the
-// given managed resource: the region declared on a node pool when there is
-// one, otherwise nil so that the client is not scoped to any region. Global
-// resources such as DNS domains or SSH keys never need one, and regional
-// resources scope their own API calls to their spec region upstream.
-func nodePoolRegion(mg resource.Managed) (*string, error) {
-	tr, ok := mg.(tjresource.Terraformed)
-	if !ok || tr.GetTerraformResourceType() != tfResourceNodePool {
-		return nil, nil
-	}
-	u, err := runtime.DefaultUnstructuredConverter.ToUnstructured(mg)
-	if err != nil {
-		return nil, errors.Wrap(err, "cannot convert the managed resource to unstructured")
-	}
-	region, err := fieldpath.Pave(u).GetString(regionFieldPath)
-	if fieldpath.IsNotFound(err) || (err == nil && region == "") {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, errors.Wrapf(err, "cannot read %s", regionFieldPath)
-	}
-	return &region, nil
 }
 
 // configureProviderMeta configures a fresh in-process SDKv2 provider instance
