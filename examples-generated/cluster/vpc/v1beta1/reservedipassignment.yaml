@@ -14,3 +14,17 @@ spec:
     reservedIpIdSelector:
       matchLabels:
         testing.upbound.io/example-name: web-server
+
+---
+
+apiVersion: vpc.civo.upbound.io/v1beta1
+kind: ReservedIP
+metadata:
+  annotations:
+    meta.upbound.io/example-id: vpc/v1beta1/reservedipassignment
+  labels:
+    testing.upbound.io/example-name: www
+  name: www
+spec:
+  forProvider:
+    name: nginx-www

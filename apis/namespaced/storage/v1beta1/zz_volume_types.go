@@ -36,10 +36,11 @@ type VolumeInitParameters struct {
 	// The region for the volume, if not declare we use the region in declared in the provider.
 	Region *string `json:"region,omitempty" tf:"region,omitempty"`
 
-	// (Number) A minimum of 1 and a maximum of your available disk space from your quota specifies the size of the volume in gigabytes
-	// A minimum of 1 and a maximum of your available disk space from your quota specifies the size of the volume in gigabytes
+	// replace for a smaller size.
+	// A minimum of 1 and a maximum of your available disk space from your quota specifies the size of the volume in gigabytes. Increases are applied in place: on a detached volume, and on a volume attached to a running instance when its volume type supports online expansion. Otherwise the API refuses the resize with `volume_onlie_resize` (detach the volume or move it to an expandable volume type) or `volume_resize_requires_running_instance` (start the instance).
 	SizeGb *int64 `json:"sizeGb,omitempty" tf:"size_gb,omitempty"`
 
+	// (String) The type of the volume
 	// The type of the volume
 	VolumeType *string `json:"volumeType,omitempty" tf:"volume_type,omitempty"`
 }
@@ -65,10 +66,11 @@ type VolumeObservation struct {
 	// The region for the volume, if not declare we use the region in declared in the provider.
 	Region *string `json:"region,omitempty" tf:"region,omitempty"`
 
-	// (Number) A minimum of 1 and a maximum of your available disk space from your quota specifies the size of the volume in gigabytes
-	// A minimum of 1 and a maximum of your available disk space from your quota specifies the size of the volume in gigabytes
+	// replace for a smaller size.
+	// A minimum of 1 and a maximum of your available disk space from your quota specifies the size of the volume in gigabytes. Increases are applied in place: on a detached volume, and on a volume attached to a running instance when its volume type supports online expansion. Otherwise the API refuses the resize with `volume_onlie_resize` (detach the volume or move it to an expandable volume type) or `volume_resize_requires_running_instance` (start the instance).
 	SizeGb *int64 `json:"sizeGb,omitempty" tf:"size_gb,omitempty"`
 
+	// (String) The type of the volume
 	// The type of the volume
 	VolumeType *string `json:"volumeType,omitempty" tf:"volume_type,omitempty"`
 }
@@ -99,11 +101,12 @@ type VolumeParameters struct {
 	// +kubebuilder:validation:Optional
 	Region *string `json:"region,omitempty" tf:"region,omitempty"`
 
-	// (Number) A minimum of 1 and a maximum of your available disk space from your quota specifies the size of the volume in gigabytes
-	// A minimum of 1 and a maximum of your available disk space from your quota specifies the size of the volume in gigabytes
+	// replace for a smaller size.
+	// A minimum of 1 and a maximum of your available disk space from your quota specifies the size of the volume in gigabytes. Increases are applied in place: on a detached volume, and on a volume attached to a running instance when its volume type supports online expansion. Otherwise the API refuses the resize with `volume_onlie_resize` (detach the volume or move it to an expandable volume type) or `volume_resize_requires_running_instance` (start the instance).
 	// +kubebuilder:validation:Optional
 	SizeGb *int64 `json:"sizeGb,omitempty" tf:"size_gb,omitempty"`
 
+	// (String) The type of the volume
 	// The type of the volume
 	// +kubebuilder:validation:Optional
 	VolumeType *string `json:"volumeType,omitempty" tf:"volume_type,omitempty"`

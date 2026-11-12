@@ -64,3 +64,17 @@ spec:
         testing.upbound.io/example-name: example
     notes: This is an example instance
     size: g3.xsmall
+
+---
+
+apiVersion: vpc.civo.upbound.io/v1beta1
+kind: Network
+metadata:
+  annotations:
+    meta.upbound.io/example-id: vpc/v1beta1/firewall
+  labels:
+    testing.upbound.io/example-name: example
+  name: example
+spec:
+  forProvider:
+    label: example-network
