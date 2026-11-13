@@ -70,6 +70,7 @@ func main() {
 
 		enableManagementPolicies = app.Flag("enable-management-policies", "Enable support for Management Policies.").Default("true").Envar("ENABLE_MANAGEMENT_POLICIES").Bool()
 		enableSecretCache        = app.Flag("enable-secret-cache", "Enable caching of Secret objects. When true, Secrets are served from the informer cache instead of direct API calls. This reduces API server load but increases memory usage.").Default("true").Envar("ENABLE_SECRET_CACHE").Bool()
+		credentialsDir           = app.Flag("credentials-dir", "The directory the provider writes a short-lived Civo credentials file to while it configures the upstream Terraform provider.").Default(clients.DefaultCredentialsDir).Envar("CREDENTIALS_DIR").String()
 
 		certsDirSet = false
 		// we record whether the command-line option "--certs-dir" was supplied
@@ -81,6 +82,10 @@ func main() {
 	)
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
+	if os.Getenv(clients.EnvToken) != "" {
+		kingpin.Fatalf("%s is set on the provider process. The upstream provider reads it before the credentials file, so it would override every ProviderConfig; unset it and keep the token in the ProviderConfig's Secret.", clients.EnvToken)
+	}
+	kingpin.FatalIfError(clients.PrepareCredentialsDir(*credentialsDir), "Cannot prepare the credentials directory")
 	kingpin.FatalIfError(resolverapis.BuildScheme(clusterapis.AddToSchemes), "Cannot register the cluster-scoped Civo APIs with the API resolver's runtime scheme")
 	kingpin.FatalIfError(resolverapis.BuildScheme(namespacedapis.AddToSchemes), "Cannot register the namespaced Civo APIs with the API resolver's runtime scheme")
 	log.Default().SetOutput(io.Discard)
@@ -182,7 +187,7 @@ func main() {
 			Features:                &feature.Flags{},
 		},
 		Provider:              clusterProvider,
-		SetupFn:               clients.TerraformSetupBuilder(),
+		SetupFn:               clients.TerraformSetupBuilder(*credentialsDir),
 		PollJitter:            pollJitter,
 		OperationTrackerStore: tjcontroller.NewOperationStore(log),
 	}
@@ -196,7 +201,7 @@ func main() {
 			Features:                &feature.Flags{},
 		},
 		Provider:              namespacedProvider,
-		SetupFn:               clients.TerraformSetupBuilder(),
+		SetupFn:               clients.TerraformSetupBuilder(*credentialsDir),
 		PollJitter:            pollJitter,
 		OperationTrackerStore: tjcontroller.NewOperationStore(log),
 	}
