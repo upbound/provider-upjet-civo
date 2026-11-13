@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/civo/civogo"
 	"github.com/crossplane/crossplane-runtime/v2/pkg/resource"
@@ -18,6 +19,8 @@ import (
 	clustervpcv1beta1 "github.com/upbound/provider-civo/apis/cluster/vpc/v1beta1"
 	namespacedkubernetesv1beta1 "github.com/upbound/provider-civo/apis/namespaced/kubernetes/v1beta1"
 	namespacedv1beta1 "github.com/upbound/provider-civo/apis/namespaced/v1beta1"
+
+	"github.com/crossplane/upjet/v2/pkg/terraform"
 )
 
 func TestResolveNamespacedSpec(t *testing.T) {
@@ -446,5 +449,63 @@ func TestConfigure(t *testing.T) {
 				t.Errorf("configure() mismatch (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+// TestConfigureStalledRemovesTheFile blocks the token validation request
+// upstream makes during Configure and checks that the credentials file is
+// gone after the TTL anyway, and that the configure call still succeeds once
+// the request completes, since upstream read the file before sending it.
+func TestConfigureStalledRemovesTheFile(t *testing.T) {
+	for _, key := range []string{"CIVO_TOKEN", "CIVO_REGION", "CIVO_API_URL", "CIVO_CREDENTIAL_FILE"} {
+		t.Setenv(key, "")
+	}
+	ttl := credentialsFileTTL
+	credentialsFileTTL = 50 * time.Millisecond
+	t.Cleanup(func() { credentialsFileTTL = ttl })
+
+	release := make(chan struct{})
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		<-release
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte("[]"))
+	}))
+	defer server.Close()
+
+	dir := t.TempDir()
+	type result struct {
+		ps  terraform.Setup
+		err error
+	}
+	done := make(chan result, 1)
+	go func() {
+		ps, err := configure(context.Background(), dir, "uid-1", "civo-token", nil, new(server.URL))
+		done <- result{ps: ps, err: err}
+	}()
+
+	deadline := time.Now().Add(5 * time.Second)
+	for len(credentialsFiles(t, dir)) != 0 {
+		if time.Now().After(deadline) {
+			t.Fatalf("credentials file still present %s after the TTL while Configure is blocked", time.Since(deadline.Add(-5*time.Second)))
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	select {
+	case r := <-done:
+		t.Fatalf("configure returned before the request completed: %v", r.err)
+	default:
+	}
+
+	close(release)
+	r := <-done
+	if r.err != nil {
+		t.Fatalf("unexpected error: %v", r.err)
+	}
+	apiClient, ok := r.ps.Meta.(*civogo.Client)
+	if !ok {
+		t.Fatalf("provider meta is %T, want *civogo.Client", r.ps.Meta)
+	}
+	if apiClient.APIKey != "civo-token" {
+		t.Errorf("client API key is %q, want civo-token", apiClient.APIKey)
 	}
 }

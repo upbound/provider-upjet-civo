@@ -30,9 +30,12 @@ The upstream Terraform provider takes the token from a credentials file. For
 every reconcile the provider writes the token to a file only its own user can
 read under `/tmp/provider-civo` (`--credentials-dir` flag, `CREDENTIALS_DIR`
 environment variable), configures the upstream provider with it and removes
-the file again. The file exists for one configure call: a few milliseconds
-plus the API round trip upstream makes to validate the token. To keep it off
-the node's disk, or when the container runs with a read-only root filesystem,
+the file again. The file is removed when the configure call returns, and 30
+seconds after it was written at the latest: the upstream provider reads it
+before it validates the token with an API call, so a call that stalls does not
+keep the token on disk, and a configure call that has not read the file by
+then fails and is retried on the next reconcile. To keep the file off the
+node's disk, or when the container runs with a read-only root filesystem,
 mount a memory-backed volume at that path:
 
 ```yaml

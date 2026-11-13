@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/civo/terraform-provider-civo/civo"
 	"github.com/crossplane/crossplane-runtime/v2/pkg/errors"
@@ -63,6 +64,13 @@ const (
 	regionFieldPath    = "spec.forProvider.region"
 )
 
+// credentialsFileTTL bounds how long a credentials file stays on disk. The
+// upstream provider reads the file before it validates the token with an API
+// call that has no timeout, so a stalled call would otherwise keep the file
+// around for as long as the connection hangs. A configure call that has not
+// read the file by then fails and is retried on the next reconcile.
+var credentialsFileTTL = 30 * time.Second
+
 // credentialsFile is the format the upstream provider's credentials_file
 // parser expects, the one the Civo CLI writes to ~/.civo.json.
 type credentialsFile struct {
@@ -104,14 +112,17 @@ func TerraformSetupBuilder(credentialsDir string) terraform.SetupFn {
 
 // configure hands the token to the upstream provider through a credentials
 // file, configures a provider instance with it and removes the file again
-// before returning. Nothing reads the file after Configure: the token lives
-// in the Civo API client stored as provider meta from then on.
+// when Configure returns, or after credentialsFileTTL at the latest. Nothing
+// reads the file after Configure: the token lives in the Civo API client
+// stored as provider meta from then on.
 func configure(ctx context.Context, credentialsDir, uid, token string, region, apiEndpoint *string) (terraform.Setup, error) {
 	path, err := writeCredentialsFile(credentialsDir, uid, token)
 	if err != nil {
 		return terraform.Setup{}, errors.Wrap(err, "cannot write the credentials file")
 	}
 	defer func() { _ = os.Remove(path) }()
+	watchdog := time.AfterFunc(credentialsFileTTL, func() { _ = os.Remove(path) })
+	defer watchdog.Stop()
 
 	ps := terraform.Setup{Configuration: buildConfiguration(path, region, apiEndpoint)}
 	return ps, errors.Wrap(configureProviderMeta(ctx, &ps), "cannot configure the civo provider client")
