@@ -17,12 +17,6 @@ func Configure(p *config.Provider) {
 		}
 	})
 
-	p.AddResourceConfigurator("civo_object_store_credential", func(r *config.Resource) {
-		// Upstream leaves the generated secret unmarked; keep it out of
-		// status and publish it as a connection detail instead.
-		r.TerraformResource.Schema["secret_access_key"].Sensitive = true
-	})
-
 	p.AddResourceConfigurator("civo_volume", func(r *config.Resource) {
 		r.References["network_id"] = config.Reference{
 			TerraformName: "civo_vpc_network",

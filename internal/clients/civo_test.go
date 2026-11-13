@@ -11,13 +11,9 @@ import (
 	"time"
 
 	"github.com/civo/civogo"
-	"github.com/crossplane/crossplane-runtime/v2/pkg/resource"
 	xpv2 "github.com/crossplane/crossplane/apis/v2/core/v2"
 	"github.com/google/go-cmp/cmp"
 
-	clusterkubernetesv1beta1 "github.com/upbound/provider-civo/apis/cluster/kubernetes/v1beta1"
-	clustervpcv1beta1 "github.com/upbound/provider-civo/apis/cluster/vpc/v1beta1"
-	namespacedkubernetesv1beta1 "github.com/upbound/provider-civo/apis/namespaced/kubernetes/v1beta1"
 	namespacedv1beta1 "github.com/upbound/provider-civo/apis/namespaced/v1beta1"
 
 	"github.com/crossplane/upjet/v2/pkg/terraform"
@@ -111,7 +107,6 @@ func TestResolveNamespacedSpec(t *testing.T) {
 func TestBuildConfiguration(t *testing.T) {
 	type args struct {
 		credentialsFile string
-		region          *string
 		apiEndpoint     *string
 	}
 
@@ -123,14 +118,6 @@ func TestBuildConfiguration(t *testing.T) {
 			args: args{credentialsFile: "/tmp/provider-civo/civo-credentials-uid-1.json"},
 			want: map[string]any{"credentials_file": "/tmp/provider-civo/civo-credentials-uid-1.json"},
 		},
-		"FileAndRegion": {
-			args: args{credentialsFile: "/tmp/provider-civo/civo-credentials-uid-1.json", region: new("LON1")},
-			want: map[string]any{"credentials_file": "/tmp/provider-civo/civo-credentials-uid-1.json", "region": "LON1"},
-		},
-		"EmptyRegionOmitted": {
-			args: args{credentialsFile: "/tmp/provider-civo/civo-credentials-uid-1.json", region: new("")},
-			want: map[string]any{"credentials_file": "/tmp/provider-civo/civo-credentials-uid-1.json"},
-		},
 		"FileAndAPIEndpoint": {
 			args: args{credentialsFile: "/tmp/provider-civo/civo-credentials-uid-1.json", apiEndpoint: new("https://api.example.civo.internal")},
 			want: map[string]any{"credentials_file": "/tmp/provider-civo/civo-credentials-uid-1.json", "api_endpoint": "https://api.example.civo.internal"},
@@ -139,15 +126,11 @@ func TestBuildConfiguration(t *testing.T) {
 			args: args{credentialsFile: "/tmp/provider-civo/civo-credentials-uid-1.json", apiEndpoint: new("")},
 			want: map[string]any{"credentials_file": "/tmp/provider-civo/civo-credentials-uid-1.json"},
 		},
-		"AllFields": {
-			args: args{credentialsFile: "/tmp/provider-civo/civo-credentials-uid-1.json", region: new("NYC1"), apiEndpoint: new("https://api.example.civo.internal")},
-			want: map[string]any{"credentials_file": "/tmp/provider-civo/civo-credentials-uid-1.json", "region": "NYC1", "api_endpoint": "https://api.example.civo.internal"},
-		},
 	}
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			got := buildConfiguration(tc.args.credentialsFile, tc.args.region, tc.args.apiEndpoint)
+			got := buildConfiguration(tc.args.credentialsFile, tc.args.apiEndpoint)
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("buildConfiguration() mismatch (-want +got):\n%s", diff)
 			}
@@ -284,70 +267,10 @@ func TestPrepareCredentialsDir(t *testing.T) {
 	})
 }
 
-func TestNodePoolRegion(t *testing.T) {
-	type args struct {
-		mg resource.Managed
-	}
-
-	cases := map[string]struct {
-		args args
-		want *string
-	}{
-		"NodePoolRegionScopesTheClient": {
-			args: args{
-				mg: &clusterkubernetesv1beta1.NodePool{Spec: clusterkubernetesv1beta1.NodePoolSpec{
-					ForProvider: clusterkubernetesv1beta1.NodePoolParameters{Region: new("LON1")},
-				}},
-			},
-			want: new("LON1"),
-		},
-		"NamespacedNodePoolRegionScopesTheClient": {
-			args: args{
-				mg: &namespacedkubernetesv1beta1.NodePool{Spec: namespacedkubernetesv1beta1.NodePoolSpec{
-					ForProvider: namespacedkubernetesv1beta1.NodePoolParameters{Region: new("FRA1")},
-				}},
-			},
-			want: new("FRA1"),
-		},
-		"NodePoolWithoutRegionLeavesTheClientUnscoped": {
-			args: args{mg: &clusterkubernetesv1beta1.NodePool{}},
-			want: nil,
-		},
-		"NodePoolEmptyRegionLeavesTheClientUnscoped": {
-			args: args{
-				mg: &clusterkubernetesv1beta1.NodePool{Spec: clusterkubernetesv1beta1.NodePoolSpec{
-					ForProvider: clusterkubernetesv1beta1.NodePoolParameters{Region: new("")},
-				}},
-			},
-			want: nil,
-		},
-		"OtherKindsLeaveTheClientUnscoped": {
-			args: args{
-				mg: &clustervpcv1beta1.Network{Spec: clustervpcv1beta1.NetworkSpec{
-					ForProvider: clustervpcv1beta1.NetworkParameters{Region: new("LON1")},
-				}},
-			},
-			want: nil,
-		},
-	}
-
-	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
-			got, err := nodePoolRegion(tc.args.mg)
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("nodePoolRegion() mismatch (-want +got):\n%s", diff)
-			}
-		})
-	}
-}
-
 // TestConfigure drives the real upstream provider configure function against
 // a local HTTP server, with the token handed over through the credentials
 // file, so it catches an upstream change to the credentials file parser or to
-// how the region and the API endpoint reach the Civo API client.
+// how the token and the API endpoint reach the Civo API client.
 func TestConfigure(t *testing.T) {
 	type request struct {
 		Path          string
@@ -372,7 +295,6 @@ func TestConfigure(t *testing.T) {
 
 	type args struct {
 		token       string
-		region      *string
 		apiEndpoint *string
 	}
 	type want struct {
@@ -384,16 +306,7 @@ func TestConfigure(t *testing.T) {
 		args args
 		want want
 	}{
-		"TokenRegionAndEndpointReachTheClient": {
-			args: args{token: "civo-token", region: new("LON1"), apiEndpoint: new(server.URL)},
-			want: want{client: client{
-				BaseURL: server.URL,
-				Region:  "LON1",
-				APIKey:  "civo-token",
-				Request: request{Path: "/v2/regions", Authorization: "bearer civo-token"},
-			}},
-		},
-		"NoRegionLeavesTheClientUnscoped": {
+		"TokenAndEndpointReachTheClientUnscoped": {
 			args: args{token: "civo-token", apiEndpoint: new(server.URL)},
 			want: want{client: client{
 				BaseURL: server.URL,
@@ -418,7 +331,7 @@ func TestConfigure(t *testing.T) {
 			}
 			seen = request{}
 			dir := t.TempDir()
-			ps, err := configure(context.Background(), dir, "uid-1", tc.args.token, tc.args.region, tc.args.apiEndpoint)
+			ps, err := configure(context.Background(), dir, "uid-1", tc.args.token, tc.args.apiEndpoint)
 			if got := credentialsFiles(t, dir); len(got) != 0 {
 				t.Errorf("credentials files left behind: %v", got)
 			}
@@ -479,7 +392,7 @@ func TestConfigureStalledRemovesTheFile(t *testing.T) {
 	}
 	done := make(chan result, 1)
 	go func() {
-		ps, err := configure(context.Background(), dir, "uid-1", "civo-token", nil, new(server.URL))
+		ps, err := configure(context.Background(), dir, "uid-1", "civo-token", new(server.URL))
 		done <- result{ps: ps, err: err}
 	}()
 

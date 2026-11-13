@@ -61,7 +61,7 @@ spec:
                 properties:
                   createDefaultRules:
                     description: |-
-                      place (the firewall is never recreated). Changing it to false requires declaring at least one ingress_rule or egress_rule to replace the default rules; changing it back to true is a no-op and does not re-create the default rules.
+                      create the default rules. If you set it to false you need to define at least one ingress or egress rule
                       The create rules flag is used to create the default firewall rules, if is not defined will be set to true. This flag only takes effect when the firewall is created; changing it on an existing firewall never recreates the firewall and does not re-create the default rules. If you set it to false you need to define at least one ingress or egress rule
                     type: boolean
                   egressRule:
@@ -247,7 +247,7 @@ spec:
                 properties:
                   createDefaultRules:
                     description: |-
-                      place (the firewall is never recreated). Changing it to false requires declaring at least one ingress_rule or egress_rule to replace the default rules; changing it back to true is a no-op and does not re-create the default rules.
+                      create the default rules. If you set it to false you need to define at least one ingress or egress rule
                       The create rules flag is used to create the default firewall rules, if is not defined will be set to true. This flag only takes effect when the firewall is created; changing it on an existing firewall never recreates the firewall and does not re-create the default rules. If you set it to false you need to define at least one ingress or egress rule
                     type: boolean
                   egressRule:
@@ -488,7 +488,7 @@ spec:
                 properties:
                   createDefaultRules:
                     description: |-
-                      place (the firewall is never recreated). Changing it to false requires declaring at least one ingress_rule or egress_rule to replace the default rules; changing it back to true is a no-op and does not re-create the default rules.
+                      create the default rules. If you set it to false you need to define at least one ingress or egress rule
                       The create rules flag is used to create the default firewall rules, if is not defined will be set to true. This flag only takes effect when the firewall is created; changing it on an existing firewall never recreates the firewall and does not re-create the default rules. If you set it to false you need to define at least one ingress or egress rule
                     type: boolean
                   egressRule:
@@ -512,7 +512,7 @@ spec:
                           x-kubernetes-list-type: set
                         id:
                           description: |-
-                            (String) The ID of the firewall rule.
+                            (String) The ID of this resource.
                             The ID of the firewall rule.
                           type: string
                         label:
@@ -533,7 +533,7 @@ spec:
                       type: object
                     type: array
                   id:
-                    description: (String) The ID of the firewall rule.
+                    description: (String) The ID of this resource.
                     type: string
                   ingressRule:
                     description: |-
@@ -556,7 +556,7 @@ spec:
                           x-kubernetes-list-type: set
                         id:
                           description: |-
-                            (String) The ID of the firewall rule.
+                            (String) The ID of this resource.
                             The ID of the firewall rule.
                           type: string
                         label:
