@@ -48,7 +48,7 @@ type EgressRuleObservation struct {
 	// +listType=set
 	Cidr []*string `json:"cidr,omitempty" tf:"cidr,omitempty"`
 
-	// (String) The ID of the firewall rule.
+	// (String) The ID of this resource.
 	// The ID of the firewall rule.
 	ID *string `json:"id,omitempty" tf:"id,omitempty"`
 
@@ -96,7 +96,7 @@ type EgressRuleParameters struct {
 
 type FirewallInitParameters struct {
 
-	// place (the firewall is never recreated). Changing it to false requires declaring at least one ingress_rule or egress_rule to replace the default rules; changing it back to true is a no-op and does not re-create the default rules.
+	// create the default rules. If you set it to false you need to define at least one ingress or egress rule
 	// The create rules flag is used to create the default firewall rules, if is not defined will be set to true. This flag only takes effect when the firewall is created; changing it on an existing firewall never recreates the firewall and does not re-create the default rules. If you set it to false you need to define at least one ingress or egress rule
 	CreateDefaultRules *bool `json:"createDefaultRules,omitempty" tf:"create_default_rules,omitempty"`
 
@@ -132,7 +132,7 @@ type FirewallInitParameters struct {
 
 type FirewallObservation struct {
 
-	// place (the firewall is never recreated). Changing it to false requires declaring at least one ingress_rule or egress_rule to replace the default rules; changing it back to true is a no-op and does not re-create the default rules.
+	// create the default rules. If you set it to false you need to define at least one ingress or egress rule
 	// The create rules flag is used to create the default firewall rules, if is not defined will be set to true. This flag only takes effect when the firewall is created; changing it on an existing firewall never recreates the firewall and does not re-create the default rules. If you set it to false you need to define at least one ingress or egress rule
 	CreateDefaultRules *bool `json:"createDefaultRules,omitempty" tf:"create_default_rules,omitempty"`
 
@@ -140,7 +140,7 @@ type FirewallObservation struct {
 	// The egress rules, this is a list of rules that will be applied to the firewall
 	EgressRule []EgressRuleObservation `json:"egressRule,omitempty" tf:"egress_rule,omitempty"`
 
-	// (String) The ID of the firewall rule.
+	// (String) The ID of this resource.
 	ID *string `json:"id,omitempty" tf:"id,omitempty"`
 
 	// (Block Set) The ingress rules, this is a list of rules that will be applied to the firewall (see below for nested schema)
@@ -162,7 +162,7 @@ type FirewallObservation struct {
 
 type FirewallParameters struct {
 
-	// place (the firewall is never recreated). Changing it to false requires declaring at least one ingress_rule or egress_rule to replace the default rules; changing it back to true is a no-op and does not re-create the default rules.
+	// create the default rules. If you set it to false you need to define at least one ingress or egress rule
 	// The create rules flag is used to create the default firewall rules, if is not defined will be set to true. This flag only takes effect when the firewall is created; changing it on an existing firewall never recreates the firewall and does not re-create the default rules. If you set it to false you need to define at least one ingress or egress rule
 	// +kubebuilder:validation:Optional
 	CreateDefaultRules *bool `json:"createDefaultRules,omitempty" tf:"create_default_rules,omitempty"`
@@ -237,7 +237,7 @@ type IngressRuleObservation struct {
 	// +listType=set
 	Cidr []*string `json:"cidr,omitempty" tf:"cidr,omitempty"`
 
-	// (String) The ID of the firewall rule.
+	// (String) The ID of this resource.
 	// The ID of the firewall rule.
 	ID *string `json:"id,omitempty" tf:"id,omitempty"`
 

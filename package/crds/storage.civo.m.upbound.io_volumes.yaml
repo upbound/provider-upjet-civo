@@ -156,12 +156,14 @@ spec:
                     type: string
                   sizeGb:
                     description: |-
-                      (Number) A minimum of 1 and a maximum of your available disk space from your quota specifies the size of the volume in gigabytes
-                      A minimum of 1 and a maximum of your available disk space from your quota specifies the size of the volume in gigabytes
+                      replace for a smaller size.
+                      A minimum of 1 and a maximum of your available disk space from your quota specifies the size of the volume in gigabytes. Increases are applied in place: on a detached volume, and on a volume attached to a running instance when its volume type supports online expansion. Otherwise the API refuses the resize with `volume_onlie_resize` (detach the volume or move it to an expandable volume type) or `volume_resize_requires_running_instance` (start the instance).
                     format: int64
                     type: integer
                   volumeType:
-                    description: The type of the volume
+                    description: |-
+                      (String) The type of the volume
+                      The type of the volume
                     type: string
                 type: object
               initProvider:
@@ -274,12 +276,14 @@ spec:
                     type: string
                   sizeGb:
                     description: |-
-                      (Number) A minimum of 1 and a maximum of your available disk space from your quota specifies the size of the volume in gigabytes
-                      A minimum of 1 and a maximum of your available disk space from your quota specifies the size of the volume in gigabytes
+                      replace for a smaller size.
+                      A minimum of 1 and a maximum of your available disk space from your quota specifies the size of the volume in gigabytes. Increases are applied in place: on a detached volume, and on a volume attached to a running instance when its volume type supports online expansion. Otherwise the API refuses the resize with `volume_onlie_resize` (detach the volume or move it to an expandable volume type) or `volume_resize_requires_running_instance` (start the instance).
                     format: int64
                     type: integer
                   volumeType:
-                    description: The type of the volume
+                    description: |-
+                      (String) The type of the volume
+                      The type of the volume
                     type: string
                 type: object
               managementPolicies:
@@ -379,12 +383,14 @@ spec:
                     type: string
                   sizeGb:
                     description: |-
-                      (Number) A minimum of 1 and a maximum of your available disk space from your quota specifies the size of the volume in gigabytes
-                      A minimum of 1 and a maximum of your available disk space from your quota specifies the size of the volume in gigabytes
+                      replace for a smaller size.
+                      A minimum of 1 and a maximum of your available disk space from your quota specifies the size of the volume in gigabytes. Increases are applied in place: on a detached volume, and on a volume attached to a running instance when its volume type supports online expansion. Otherwise the API refuses the resize with `volume_onlie_resize` (detach the volume or move it to an expandable volume type) or `volume_resize_requires_running_instance` (start the instance).
                     format: int64
                     type: integer
                   volumeType:
-                    description: The type of the volume
+                    description: |-
+                      (String) The type of the volume
+                      The type of the volume
                     type: string
                 type: object
               conditions:

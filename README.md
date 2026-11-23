@@ -132,10 +132,8 @@ default region. Global resources (`dns` `Domain` and `Record`, `compute`
 `SSHKey`) have no region. Resource IDs such as networks and disk images are
 region-scoped, so references between resources must stay within one region.
 
-`kubernetes` `NodePool` also takes `spec.forProvider.region` and needs it
-whenever its cluster is outside the account's default region: the upstream
-Terraform resource has no region attribute, so the provider applies this value
-to the Civo API client for every call made for that resource instead.
+`kubernetes` `NodePool` is the exception: when `spec.forProvider.region` is
+omitted, it is created in the region of its cluster.
 
 ## Developing
 

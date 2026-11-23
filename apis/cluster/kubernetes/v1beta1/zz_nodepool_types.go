@@ -44,7 +44,8 @@ type NodePoolInitParameters struct {
 	// Node pool belongs to the public ip node pool
 	PublicIPNodePool *bool `json:"publicIpNodePool,omitempty" tf:"public_ip_node_pool,omitempty"`
 
-	// The region of the cluster the node pool belongs to. Defaults to the account's default region. It scopes every API call made for this resource, because the upstream resource has no region attribute of its own.
+	// (String) The region of the node pool, if not declare we use the region of the cluster
+	// The region of the node pool, if not declare we use the region of the cluster
 	Region *string `json:"region,omitempty" tf:"region,omitempty"`
 
 	// (String) Size of the nodes in the nodepool
@@ -84,7 +85,8 @@ type NodePoolObservation struct {
 	// Node pool belongs to the public ip node pool
 	PublicIPNodePool *bool `json:"publicIpNodePool,omitempty" tf:"public_ip_node_pool,omitempty"`
 
-	// The region of the cluster the node pool belongs to. Defaults to the account's default region. It scopes every API call made for this resource, because the upstream resource has no region attribute of its own.
+	// (String) The region of the node pool, if not declare we use the region of the cluster
+	// The region of the node pool, if not declare we use the region of the cluster
 	Region *string `json:"region,omitempty" tf:"region,omitempty"`
 
 	// (String) Size of the nodes in the nodepool
@@ -131,7 +133,8 @@ type NodePoolParameters struct {
 	// +kubebuilder:validation:Optional
 	PublicIPNodePool *bool `json:"publicIpNodePool,omitempty" tf:"public_ip_node_pool,omitempty"`
 
-	// The region of the cluster the node pool belongs to. Defaults to the account's default region. It scopes every API call made for this resource, because the upstream resource has no region attribute of its own.
+	// (String) The region of the node pool, if not declare we use the region of the cluster
+	// The region of the node pool, if not declare we use the region of the cluster
 	// +kubebuilder:validation:Optional
 	Region *string `json:"region,omitempty" tf:"region,omitempty"`
 
